@@ -1,0 +1,8 @@
+.idea
+
+*.iml
+
+easylock-client/target
+easylock-common/target
+easylock-server/target
+easylock-spring-boot-starter/target
