@@ -16,8 +16,10 @@
 
 package io.github.easylock.server.handler;
 
+import io.github.easylock.common.util.Loggers;
 import io.github.easylock.server.property.ServerProperties;
 
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -47,7 +49,7 @@ public final class PropertiesHandler {
     private static final Logger logger = Logger.getLogger(PropertiesHandler.class.getName());
 
     public void handleProperties(String[] args) {
-        logger.log(Level.INFO, "Properties handled.");
+        Loggers.log(logger, Level.INFO, "Properties handled - " + Arrays.toString(args));
     }
 
 }

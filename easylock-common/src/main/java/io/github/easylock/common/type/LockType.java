@@ -14,35 +14,17 @@
  *  limitations under the License.
  */
 
-package io.github.easylock.client.error;
-
-import io.github.easylock.common.request.Request;
+package io.github.easylock.common.type;
 
 /**
- * Enumerations for {@link Request} errors.
+ * Definition for <code>Lock</code> types.
  *
  * @author Lam Tong
  * @version 1.0.0
  * @since 1.0.0
  */
-public enum RequestError {
+public enum LockType {
 
-    EMPTY_LOCK_KEY("Lock key should not be null or empty, reset lock key."),
-
-    LOCKING_ALREADY("Locking succeeds already, lock cancels."),
-
-    LOCKING_FAIL("Locking fails before, unlock cancels."),
-
-    UNLOCKING_ALREADY("Unlocking succeeds already, unlock cancels.");
-
-    private final String message;
-
-    RequestError(String message) {
-        this.message = message;
-    }
-
-    public String getMessage() {
-        return this.message;
-    }
+    SIMPLE_LOCK
 
 }

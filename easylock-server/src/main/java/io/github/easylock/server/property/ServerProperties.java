@@ -26,7 +26,7 @@ package io.github.easylock.server.property;
  */
 public final class ServerProperties extends Properties {
 
-    private static volatile ServerProperties properties = null;
+    private static final ServerProperties properties = new ServerProperties();
 
     private int port = 40417;
 
@@ -36,13 +36,6 @@ public final class ServerProperties extends Properties {
     }
 
     public static ServerProperties getServerProperties() {
-        if (properties == null) {
-            synchronized (ServerProperties.class) {
-                if (properties == null) {
-                    properties = new ServerProperties();
-                }
-            }
-        }
         return properties;
     }
 

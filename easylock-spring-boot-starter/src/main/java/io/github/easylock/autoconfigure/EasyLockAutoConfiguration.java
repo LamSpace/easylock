@@ -18,6 +18,7 @@ package io.github.easylock.autoconfigure;
 
 import io.github.easylock.autoconfigure.aspect.SimpleLockAspect;
 import io.github.easylock.client.property.ClientProperties;
+import io.github.easylock.common.util.Loggers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -26,7 +27,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 
 import javax.annotation.PostConstruct;
-import java.lang.reflect.Field;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -64,37 +64,17 @@ public class EasyLockAutoConfiguration {
     @PostConstruct
     public void setClientProperties() {
         ClientProperties clientProperties = ClientProperties.getProperties();
-        Class<? extends ClientProperties> clazz = clientProperties.getClass();
-        try {
-            Field application = clazz.getDeclaredField("application");
-            application.setAccessible(true);
-            String property = this.environment.getProperty("spring.application.name");
-            if (property != null) {
-                application.set(clientProperties, property);
-            } else {
-                application.set(clientProperties, UUID.randomUUID().toString());
-            }
-
-            Field host = clazz.getDeclaredField("host");
-            host.setAccessible(true);
-            host.set(clientProperties, this.properties.getServerHost());
-
-            Field port = clazz.getDeclaredField("port");
-            port.setAccessible(true);
-            port.set(clientProperties, this.properties.getServerPort());
-
-            Field connections = clazz.getDeclaredField("connections");
-            connections.setAccessible(true);
-            connections.set(clientProperties, this.properties.getChannelConnections());
-
-            Field queueSize = clazz.getDeclaredField("queueSize");
-            queueSize.setAccessible(true);
-            queueSize.set(clientProperties, this.properties.getCacheQueueSize());
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, e.getMessage());
-            }
+        String property = this.environment.getProperty("spring.application.name");
+        if (property != null) {
+            clientProperties.setApplication(property);
+        } else {
+            clientProperties.setApplication(UUID.randomUUID().toString());
         }
+        clientProperties.setHost(this.properties.getServerHost());
+        clientProperties.setPort(this.properties.getServerPort());
+        clientProperties.setConnections(this.properties.getChannelConnections());
+        clientProperties.setQueueSize(this.properties.getCacheQueueSize());
+        Loggers.log(logger, Level.INFO, "Properties for client and server has been updated.");
     }
 
 }

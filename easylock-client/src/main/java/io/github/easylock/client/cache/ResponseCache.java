@@ -17,8 +17,9 @@
 package io.github.easylock.client.cache;
 
 import io.github.easylock.client.property.ClientProperties;
-import io.github.easylock.common.request.Request;
-import io.github.easylock.common.response.Response;
+import io.github.easylock.common.core.Request;
+import io.github.easylock.common.core.Response;
+import io.github.easylock.common.util.Loggers;
 
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -47,7 +48,7 @@ public final class ResponseCache {
 
     private static final Logger logger = Logger.getLogger(ResponseCache.class.getName());
 
-    private static volatile ResponseCache cache;
+    private static final ResponseCache cache = new ResponseCache();
 
     /**
      * Cache pool to store received responses for threads.
@@ -57,20 +58,7 @@ public final class ResponseCache {
     private ResponseCache() {
     }
 
-    /**
-     * <b>Double-Check-Lock</b> of <code>Singleton</code>
-     *
-     * @return single instance of type {@link ResponseCache}.
-     * @since 1.0.0
-     */
     public static ResponseCache getCache() {
-        if (cache == null) {
-            synchronized (ResponseCache.class) {
-                if (cache == null) {
-                    cache = new ResponseCache();
-                }
-            }
-        }
         return cache;
     }
 
@@ -103,9 +91,8 @@ public final class ResponseCache {
                     try {
                         response = queue.take();
                     } catch (InterruptedException e) {
-                        if (logger.isLoggable(Level.SEVERE)) {
-                            logger.log(Level.SEVERE, e.getMessage());
-                        }
+                        Loggers.log(logger, Level.SEVERE, e.getMessage());
+                        Thread.currentThread().interrupt();
                     }
                     return response;
                 }).orElse(null);
@@ -123,9 +110,8 @@ public final class ResponseCache {
         try {
             this.cachePool.get(key).put(response);
         } catch (InterruptedException e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, e.getMessage());
-            }
+            Loggers.log(logger, Level.SEVERE, e.getMessage());
+            Thread.currentThread().interrupt();
         }
     }
 

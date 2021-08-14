@@ -16,22 +16,20 @@
 
 package io.github.easylock.server.resolver;
 
-import io.github.easylock.common.request.LockRequest;
-import io.github.easylock.common.request.Request;
-import io.github.easylock.common.request.UnlockRequest;
-import io.github.easylock.common.response.Response;
-import io.github.easylock.common.type.Type;
+import io.github.easylock.common.core.Request;
+import io.github.easylock.common.core.Response;
+import io.github.easylock.common.type.LockType;
 
 /**
  * Interface {@link Resolver} resolves requests. Typically, there are two essential steps
  * to resolve requests, namely
  * <ol>
- *     <li>Decides {@link Type} of the requests.</li>
- *     <li>Processed the {@link LockRequest} or {@link UnlockRequest}.</li>
+ *     <li>Decides {@link LockType} of the requests.</li>
+ *     <li>Processed the {@code LockRequest} or {@code UnlockRequest}.</li>
  * </ol>
  * Hence, implementations of {@link Resolver} should own these abilities to resolve requests.
  * One of these implementations is {@link RequestResolver}, which dispatches requests according
- * to their {@link Request#type}. And another one is {@link AbstractLockResolver}, which implements
+ * to their {@link Request#lockType}. And another one is {@link AbstractLockResolver}, which implements
  * {@link Resolver} as well and defines a template to resolve requests for a certain type of lock
  * in {@link AbstractLockResolver#resolve(Request)}.
  *

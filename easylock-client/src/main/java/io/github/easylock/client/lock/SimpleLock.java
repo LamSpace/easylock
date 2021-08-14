@@ -16,15 +16,15 @@
 
 package io.github.easylock.client.lock;
 
-import io.github.easylock.client.error.RequestError;
+import io.github.easylock.client.constant.RequestError;
 import io.github.easylock.client.property.ClientProperties;
 import io.github.easylock.client.sender.RequestSender;
-import io.github.easylock.common.request.LockRequest;
-import io.github.easylock.common.request.UnlockRequest;
-import io.github.easylock.common.response.Response;
-import io.github.easylock.common.type.Type;
+import io.github.easylock.common.core.Request;
+import io.github.easylock.common.core.Response;
+import io.github.easylock.common.type.LockType;
+import io.github.easylock.common.type.RequestType;
+import io.github.easylock.common.util.Loggers;
 
-import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -82,29 +82,25 @@ public final class SimpleLock extends Lock {
     private boolean doLock(boolean tryLock) {
         if (!this.validateKey()) {
             // If lock key is not available, then returns false immediately.
-            if (logger.isLoggable(Level.INFO)) {
-                logger.log(Level.INFO, RequestError.EMPTY_LOCK_KEY.getMessage());
-            }
+            Loggers.log(logger, Level.INFO, RequestError.EMPTY_LOCK_KEY.getMessage());
             return false;
         }
         if (!this.canLock()) {
             // If this lock instance has been locked successfully before, then returns false immediately.
-            if (logger.isLoggable(Level.INFO)) {
-                logger.log(Level.INFO, RequestError.LOCKING_ALREADY.getMessage());
-            }
+            Loggers.log(logger, Level.INFO, RequestError.LOCKING_ALREADY.getMessage());
             return false;
         }
-        LockRequest request = new LockRequest(this.getKey(), properties.getApplication(),
-                Thread.currentThread().getName(), Type.SIMPLE_LOCK, tryLock);
-        RequestSender requestSender = Objects.requireNonNull(sender.clone());
-        Response response;
-        if ((response = requestSender.send(request)).isSuccess()) {
-            // There are two cases that this code will be executed.
-            //     1. lock() is invoked.
-            //     2. tryLock() is invoked and lock is acquired.
+        Request request = new Request(this.getKey(), properties.getApplication(),
+                Thread.currentThread().getName(), LockType.SIMPLE_LOCK, RequestType.LOCK_REQUEST,
+                tryLock);
+        Response response = sender.send(request);
+        if (response.isSuccess()) {
+//             There are two cases that this code will be executed.
+//                 1. lock() is invoked.
+//                 2. tryLock() is invoked and lock is acquired.
             this.setCanLock(false);
-            this.setSuccess(true);
             this.setCanUnlock(true);
+            this.setSuccess(true);
         }
         return response.isSuccess();
     }
@@ -113,23 +109,18 @@ public final class SimpleLock extends Lock {
     public boolean unlock() {
         if (!this.success()) {
             // If this lock instance has not been locked successfully before, then returns immediately.
-            if (logger.isLoggable(Level.INFO)) {
-                logger.log(Level.INFO, RequestError.LOCKING_FAIL.getMessage());
-            }
+            Loggers.log(logger, Level.INFO, RequestError.LOCKING_FAIL.getMessage());
             return false;
         }
         if (!this.canUnlock()) {
             // If this lock instance has been unlocked, then returns immediately.
-            if (logger.isLoggable(Level.INFO)) {
-                logger.log(Level.INFO, RequestError.UNLOCKING_ALREADY.getMessage());
-            }
+            Loggers.log(logger, Level.INFO, RequestError.UNLOCKING_ALREADY.getMessage());
             return false;
         }
-        UnlockRequest request = new UnlockRequest(this.getKey(), properties.getApplication(),
-                Thread.currentThread().getName(), Type.SIMPLE_LOCK);
-        RequestSender requestSender = Objects.requireNonNull(sender.clone());
-        Response response;
-        if ((response = requestSender.send(request)).isSuccess()) {
+        Request request = new Request(this.getKey(), properties.getApplication(),
+                Thread.currentThread().getName(), LockType.SIMPLE_LOCK, RequestType.UNLOCK_REQUEST);
+        Response response = sender.send(request);
+        if (response.isSuccess()) {
             // Generally, unlock() always returns true.
             this.setCanUnlock(false);
         }

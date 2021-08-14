@@ -47,23 +47,43 @@ public final class ClientProperties {
     }
 
     public String getApplication() {
-        return this.application;
+        return application;
+    }
+
+    public void setApplication(String application) {
+        this.application = application;
     }
 
     public String getHost() {
-        return this.host;
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
     }
 
     public int getPort() {
-        return this.port;
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
     }
 
     public int getConnections() {
-        return this.connections;
+        return connections;
+    }
+
+    public void setConnections(int connections) {
+        this.connections = connections;
     }
 
     public int getQueueSize() {
-        return this.queueSize;
+        return queueSize;
+    }
+
+    public void setQueueSize(int queueSize) {
+        this.queueSize = queueSize;
     }
 
     @Override

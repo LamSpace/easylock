@@ -16,11 +16,10 @@
 
 package io.github.easylock.server.resolver;
 
-import io.github.easylock.common.request.LockRequest;
-import io.github.easylock.common.request.Request;
-import io.github.easylock.common.request.UnlockRequest;
-import io.github.easylock.common.response.LockResponse;
-import io.github.easylock.common.response.UnlockResponse;
+import io.github.easylock.common.core.Request;
+import io.github.easylock.common.core.Response;
+import io.github.easylock.common.type.ResponseType;
+import io.github.easylock.common.util.Loggers;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -29,7 +28,7 @@ import java.util.logging.Logger;
 
 /**
  * {@link SimpleLockResolver} extends {@link AbstractLockResolver} and overrides those abstract methods
- * to fulfill the process for {@link LockRequest} and {@link UnlockRequest} due to that
+ * to fulfill the process for {@code LockRequest} and {@code UnlockRequest} due to that
  * {@link AbstractLockResolver#resolve(Request)} has already define a template to resolve requests.
  *
  * @author Lam Tong
@@ -41,53 +40,44 @@ public final class SimpleLockResolver extends AbstractLockResolver {
 
     private static final Logger logger = Logger.getLogger(SimpleLockResolver.class.getName());
 
-    private static volatile SimpleLockResolver resolver = null;
+    private static final SimpleLockResolver resolver = new SimpleLockResolver();
 
     private SimpleLockResolver() {
     }
 
     public static SimpleLockResolver getResolver() {
-        if (resolver == null) {
-            synchronized (SimpleLockResolver.class) {
-                if (resolver == null) {
-                    resolver = new SimpleLockResolver();
-                }
-            }
-        }
         return resolver;
     }
 
     @Override
-    public LockResponse resolveTryLock(LockRequest lockRequest) {
+    @SuppressWarnings("DuplicatedCode")
+    public Response resolveTryLock(Request lockRequest) {
         String key = lockRequest.getKey();
         if (!this.lockHolder.containsKey(key)) {
             synchronized (this.lockMonitor) {
                 if (!this.lockHolder.containsKey(key)) {
                     this.lockHolder.put(key, lockRequest);
-                    if (logger.isLoggable(Level.INFO)) {
-                        logger.log(Level.INFO, "[" + lockRequest.getApplicationName() + "] - [" +
-                                lockRequest.getThreadName() + "] acquires SimpleLock successfully.");
-                    }
-                    return new LockResponse(key, lockRequest.getIdentity(), true, SUCCEED);
+                    Loggers.log(logger, Level.INFO, acquireLock(lockRequest));
+                    return new Response(key, lockRequest.getIdentity(), true, SUCCEED,
+                            ResponseType.LOCK_RESPONSE);
                 }
             }
         }
-        return new LockResponse(key, lockRequest.getIdentity(), false, LOCKED_ALREADY);
+        return new Response(key, lockRequest.getIdentity(), false, LOCKED_ALREADY,
+                ResponseType.LOCK_RESPONSE);
     }
 
     @Override
-    public LockResponse resolveLock(LockRequest lockRequest) {
+    @SuppressWarnings("DuplicatedCode")
+    public Response resolveLock(Request lockRequest) {
         String key = lockRequest.getKey();
         if (!this.lockHolder.containsKey(key)) {
             synchronized (this.lockMonitor) {
                 if (!this.lockHolder.containsKey(key)) {
                     this.lockHolder.put(key, lockRequest);
-                    if (logger.isLoggable(Level.INFO)) {
-                        logger.log(Level.INFO, "[" + lockRequest.getApplicationName() + "] - [" +
-                                lockRequest.getThreadName() + "] acquires SimpleLock successfully.");
-                    }
-                    return new LockResponse(key, lockRequest.getIdentity(),
-                            true, SUCCEED);
+                    Loggers.log(logger, Level.INFO, acquireLock(lockRequest));
+                    return new Response(key, lockRequest.getIdentity(),
+                            true, SUCCEED, ResponseType.LOCK_RESPONSE);
                 }
             }
         }
@@ -98,38 +88,42 @@ public final class SimpleLockResolver extends AbstractLockResolver {
             this.permissions.get(key).take();
             this.lockHolder.put(key, lockRequest);
         } catch (InterruptedException e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, e.getMessage());
-            }
+            Loggers.log(logger, Level.SEVERE, e.getMessage());
+            Thread.currentThread().interrupt();
         }
-        if (logger.isLoggable(Level.INFO)) {
-            logger.log(Level.INFO, "[" + lockRequest.getApplicationName() + "] - [" +
-                    lockRequest.getThreadName() + "] acquires SimpleLock successfully.");
-        }
-        return new LockResponse(key, lockRequest.getIdentity(),
-                true, SUCCEED);
+        Loggers.log(logger, Level.INFO, acquireLock(lockRequest));
+        return new Response(key, lockRequest.getIdentity(),
+                true, SUCCEED, ResponseType.LOCK_RESPONSE);
     }
 
     @Override
-    public UnlockResponse resolveUnlock(UnlockRequest unlockRequest) {
+    public Response resolveUnlock(Request unlockRequest) {
         String key = unlockRequest.getKey();
         this.lockHolder.remove(key);
-        if (logger.isLoggable(Level.INFO)) {
-            logger.log(Level.INFO, "[" + unlockRequest.getApplicationName() + "] - [" +
-                    unlockRequest.getThreadName() + "] releases SimpleLock successfully.");
-        }
+        Loggers.log(logger, Level.INFO, releaseLock(unlockRequest));
         try {
             if (this.requests.containsKey(key) && !this.requests.get(key).isEmpty()) {
                 this.requests.get(key).take();
                 this.permissions.get(key).put(new Object());
             }
         } catch (InterruptedException e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, e.getMessage());
-            }
+            Loggers.log(logger, Level.SEVERE, e.getMessage());
+            Thread.currentThread().interrupt();
         }
-        return new UnlockResponse(key, unlockRequest.getIdentity(),
-                true, SUCCEED);
+        return new Response(key, unlockRequest.getIdentity(),
+                true, SUCCEED, ResponseType.UNLOCK_RESPONSE);
+    }
+
+    @Override
+    public String acquireLock(Request request) {
+        return "[" + request.getApplication() + SEPARATOR + request.getThread() +
+                "] acquires SimpleLock successfully";
+    }
+
+    @Override
+    public String releaseLock(Request request) {
+        return "[" + request.getApplication() + SEPARATOR + request.getThread() +
+                "] acquires SimpleLock successfully";
     }
 
 }

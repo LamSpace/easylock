@@ -18,36 +18,19 @@ package io.github.easylock.client.sender;
 
 import io.github.easylock.client.cache.ResponseCache;
 import io.github.easylock.client.provider.ChannelPoolProvider;
-import io.github.easylock.common.request.LockRequest;
-import io.github.easylock.common.request.Request;
-import io.github.easylock.common.request.UnlockRequest;
-import io.github.easylock.common.response.LockResponse;
-import io.github.easylock.common.response.Response;
-import io.github.easylock.common.response.UnlockResponse;
+import io.github.easylock.common.core.Request;
+import io.github.easylock.common.core.Response;
+import io.github.easylock.common.type.RequestType;
+import io.github.easylock.common.type.ResponseType;
 import io.netty.channel.Channel;
 import io.netty.channel.pool.FixedChannelPool;
 import io.netty.util.concurrent.FutureListener;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * {@link RequestSender} sends requests, namely {@link LockRequest} and {@link UnlockRequest},
+ * {@link RequestSender} sends requests, namely {@code Lock Request} and {@code Unlock Request},
  * to server and try to acquire corresponding response in {@link ResponseCache}.
- * <p>
- * <b>Usage of {@link Cloneable}</b>
- * <p>
- * Interface {@link Cloneable} indicates that clients can acquire an instance of {@link RequestSender}
- * by cloning the <code>single</code> instance provided by {@link RequestSender} itself, not by
- * constructor of {@link RequestSender}. For example, {@link RequestSender} may be used as belows.
- * <pre>
- *     {@code
- *     ...
- *     RequestSender sender = RequestSender.getSender().clone();
- *     sender.send(request);
- *     ...
- *     }
- * </pre>
  *
  * @author Lam Tong
  * @version 1.0.0
@@ -56,8 +39,9 @@ import java.util.logging.Logger;
  * @see Response
  * @since 1.0.0
  */
-public final class RequestSender implements Cloneable {
+public final class RequestSender {
 
+    @SuppressWarnings("unused")
     private static final Logger logger = Logger.getLogger(RequestSender.class.getName());
 
     private static final RequestSender sender = new RequestSender();
@@ -69,7 +53,6 @@ public final class RequestSender implements Cloneable {
         return sender;
     }
 
-    @SuppressWarnings("all")
     public Response send(Request request) {
         final String key = request.getKey();
         final int identity = request.getIdentity();
@@ -82,14 +65,16 @@ public final class RequestSender implements Cloneable {
                 channel.writeAndFlush(request);
                 pool.release(channel);
             } else {
-                // Fails to acquire a channel, maybe the client fails to connect to server, or network breaddown.
+                // Fails to acquire a channel, maybe the client fails to connect to server, or network breakdown.
                 // Thus requests cancel and responses are created at client to answer the requests.
-                if (request instanceof LockRequest) {
-                    cache.put(new LockResponse(key, identity, false,
-                            "Connection to server fails, lock request cancelled"));
+                if (request.getRequestType() == RequestType.LOCK_REQUEST) {
+                    cache.put(new Response(key, identity, false,
+                            "Connection to server fails, lock request cancelled",
+                            ResponseType.LOCK_RESPONSE));
                 } else {
-                    cache.put(new UnlockResponse(key, identity, false,
-                            "Connection to server fails, unlock request cancelled"));
+                    cache.put(new Response(key, identity, false,
+                            "Connection to server fails, unlock request cancelled",
+                            ResponseType.LOCK_RESPONSE));
                 }
             }
         });
@@ -108,6 +93,7 @@ public final class RequestSender implements Cloneable {
         Response response;
         for (; ; ) {
             Response res;
+            //noinspection StatementWithEmptyBody
             while ((res = cache.peek(key)) == null) ;
             if (res.getIdentity() == identity) {
                 response = cache.take(key);
@@ -115,23 +101,6 @@ public final class RequestSender implements Cloneable {
             }
         }
         return response;
-    }
-
-    /**
-     * Clones an instance of type {@link RequestSender}.
-     *
-     * @return an instance of {@link RequestSender}.
-     */
-    @Override
-    public RequestSender clone() {
-        try {
-            return ((RequestSender) super.clone());
-        } catch (CloneNotSupportedException e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, e.getMessage());
-            }
-        }
-        return null;
     }
 
 }

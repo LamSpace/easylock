@@ -17,14 +17,16 @@
 package io.github.easylock.common.type;
 
 /**
- * Definition for <code>Lock</code> types.
+ * Definition for <code>Response</code> types.
  *
  * @author Lam Tong
  * @version 1.0.0
  * @since 1.0.0
  */
-public enum Type {
+public enum ResponseType {
 
-    SIMPLE_LOCK
+    LOCK_RESPONSE,
+
+    UNLOCK_RESPONSE
 
 }

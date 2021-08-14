@@ -19,7 +19,8 @@ package io.github.easylock.autoconfigure.aspect;
 import io.github.easylock.autoconfigure.annotation.BySimpleLock;
 import io.github.easylock.client.lock.LockFactory;
 import io.github.easylock.client.lock.SimpleLock;
-import io.github.easylock.common.type.Type;
+import io.github.easylock.common.type.LockType;
+import io.github.easylock.common.util.Loggers;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -47,6 +48,7 @@ public class SimpleLockAspect {
 
     @Pointcut(value = "@annotation(io.github.easylock.autoconfigure.annotation.BySimpleLock)")
     public void simpleLockAspect() {
+        // A point cut.
     }
 
     @Around(value = "simpleLockAspect()")
@@ -57,12 +59,10 @@ public class SimpleLockAspect {
         boolean tryLock = bySimpleLock.tryLock();
         boolean skipIfFalse = bySimpleLock.skipIfFalse();
         if (key.length() == 0) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, "Lock key should not be empty, method invocation fails.");
-            }
+            Loggers.log(logger, Level.SEVERE, "Lock key should not be empty, method invocation fails.");
             return null;
         }
-        SimpleLock lock = (SimpleLock) LockFactory.getLock(Type.SIMPLE_LOCK, key);
+        SimpleLock lock = (SimpleLock) LockFactory.getLock(LockType.SIMPLE_LOCK, key);
         Object ans = null;
         if (tryLock) {
             if (lock.tryLock()) {
@@ -85,12 +85,10 @@ public class SimpleLockAspect {
         try {
             ans = point.proceed();
         } catch (Throwable e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, e.getMessage());
-            }
+            Loggers.log(logger, Level.SEVERE, e.getMessage());
         } finally {
-            if (!lock.unlock() && logger.isLoggable(Level.INFO)) {
-                logger.log(Level.INFO, "Unlocking fails, maybe client disconnect from lock server.");
+            if (!lock.unlock()) {
+                Loggers.log(logger, Level.INFO, "Unlocking fails, maybe client disconnect from lock server.");
             }
         }
         return ans;
@@ -101,9 +99,7 @@ public class SimpleLockAspect {
         try {
             ans = point.proceed();
         } catch (Throwable e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, e.getMessage());
-            }
+            Loggers.log(logger, Level.SEVERE, e.getMessage());
         }
         return ans;
     }

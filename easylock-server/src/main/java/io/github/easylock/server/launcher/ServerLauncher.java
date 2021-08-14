@@ -16,6 +16,7 @@
 
 package io.github.easylock.server.launcher;
 
+import io.github.easylock.common.util.Loggers;
 import io.github.easylock.server.initializer.ServerChannelInitializer;
 import io.github.easylock.server.property.Properties;
 import io.github.easylock.server.property.ServerProperties;
@@ -45,11 +46,10 @@ public final class ServerLauncher implements Launcher {
 
     @Override
     public void launch(Properties properties) {
+        Loggers.log(logger, Level.INFO, "Starts to launch easylock server.");
         ServerProperties serverProperties = (ServerProperties) properties;
-        if (logger.isLoggable(Level.INFO)) {
-            logger.log(Level.INFO, "Starts to launch easylock server.");
-        }
-        EventLoopGroup boss = new NioEventLoopGroup(), worker = new NioEventLoopGroup();
+        EventLoopGroup boss = new NioEventLoopGroup();
+        EventLoopGroup worker = new NioEventLoopGroup();
         try {
             ServerBootstrap bootstrap = new ServerBootstrap()
                     .group(boss, worker)
@@ -58,14 +58,11 @@ public final class ServerLauncher implements Launcher {
                     .childOption(ChannelOption.SO_KEEPALIVE, true)
                     .childHandler(new ServerChannelInitializer());
             ChannelFuture future = bootstrap.bind(serverProperties.getPort()).sync();
-            if (logger.isLoggable(Level.INFO)) {
-                logger.log(Level.INFO, "Easylock server is launched, listening at port " + serverProperties.getPort());
-            }
+            Loggers.log(logger, Level.INFO, "Easylock server is launched, listening at port " + serverProperties.getPort());
             future.channel().closeFuture().sync();
         } catch (InterruptedException e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, e.getMessage());
-            }
+            Loggers.log(logger, Level.SEVERE, e.getMessage());
+            Thread.currentThread().interrupt();
         } finally {
             boss.shutdownGracefully();
             worker.shutdownGracefully();

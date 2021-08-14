@@ -16,6 +16,8 @@
 
 package io.github.easylock.server.handler;
 
+import io.github.easylock.common.util.Loggers;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -36,9 +38,9 @@ public final class BannerHandler {
 
     private static final Logger logger = Logger.getLogger(BannerHandler.class.getName());
 
-    private static final String bannerFilename = "banner.txt";
+    private static final String BANNER_FILENAME = "banner.txt";
 
-    private static final URL url = BannerHandler.class.getClassLoader().getResource(bannerFilename);
+    private static final URL url = BannerHandler.class.getClassLoader().getResource(BANNER_FILENAME);
 
     public void handleBanner() {
         if (url == null) {
@@ -49,33 +51,34 @@ public final class BannerHandler {
     }
 
     private void displayDefaultBanner() {
-        System.out.println("           _                                     _                             \n" +
-                "         /' `\\                                 /~_)                      /'  _/\n" +
-                "       /'   ._)                            ~-/'-~                      /' _/~  \n" +
-                "      (___   ____     ____                 /'      ____     ____    ,/'_/~     \n" +
-                "   _-~    `/'    )  /'    )--/'    /     /'      /'    )--/'    )--/\\/~        \n" +
-                " /'      /'    /'  '---,   /'    /' /~\\,'   _  /'    /' /'       /'  \\         \n" +
-                "(_____, (___,/(__(___,/   (___,/(__(,/'`\\____)(___,/'  (___,/  /'     \\        \n" +
-                "                             /'                                                \n" +
-                "                     /     /'                                                  \n" +
-                "                    (___,/'                                                   \n" +
-                "\n          Copyright 2021 the original author, Lam Tong, Version 1.0.0.\n");
+        Loggers.log(logger, Level.INFO,
+                "\n           _                                     _                             \n" +
+                        "         /' `\\                                 /~_)                      /'  _/\n" +
+                        "       /'   ._)                            ~-/'-~                      /' _/~  \n" +
+                        "      (___   ____     ____                 /'      ____     ____    ,/'_/~     \n" +
+                        "   _-~    `/'    )  /'    )--/'    /     /'      /'    )--/'    )--/\\/~        \n" +
+                        " /'      /'    /'  '---,   /'    /' /~\\,'   _  /'    /' /'       /'  \\         \n" +
+                        "(_____, (___,/(__(___,/   (___,/(__(,/'`\\____)(___,/'  (___,/  /'     \\        \n" +
+                        "                             /'                                                \n" +
+                        "                     /     /'                                                  \n" +
+                        "                    (___,/'                                                   \n" +
+                        "\n          Copyright 2021 the original author, Lam Tong, Version 1.0.0.\n");
     }
 
     private void displayBanner() {
-        @SuppressWarnings("all")
+        @SuppressWarnings("ConstantConditions")
         File file = new File(url.getPath());
         byte[] bytes = new byte[1024];
         int len;
+        StringBuilder sb = new StringBuilder("\n");
         try (FileInputStream in = new FileInputStream(file)) {
             while ((len = in.read(bytes)) != -1) {
-                System.out.println(new String(bytes, 0, len));
+                sb.append(new String(bytes, 0, len));
             }
         } catch (IOException e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, e.getMessage());
-            }
+            Loggers.log(logger, Level.SEVERE, e.getMessage());
         }
+        Loggers.log(logger, Level.INFO, sb.toString());
     }
 
 }

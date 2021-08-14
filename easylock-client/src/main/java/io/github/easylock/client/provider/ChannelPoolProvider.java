@@ -76,30 +76,22 @@ public final class ChannelPoolProvider {
 
     private static final Bootstrap bootstrap = new Bootstrap();
 
-    private static volatile FixedChannelPool pool;
+    private static final FixedChannelPool pool;
+
+    static {
+        bootstrap.group(worker)
+                .remoteAddress(new InetSocketAddress(properties.getHost(), properties.getPort()))
+                .channel(NioSocketChannel.class)
+                .option(ChannelOption.TCP_NODELAY, true)
+                .option(ChannelOption.SO_KEEPALIVE, true);
+        pool = new FixedChannelPool(bootstrap, new ClientChannelPoolHandler(),
+                properties.getConnections());
+    }
 
     private ChannelPoolProvider() {
     }
-
-    /**
-     * Provides a channel pool via <b>Double-Check-Lock</b>.
-     *
-     * @return a channel pool with fixed channel number.
-     */
+    
     public static FixedChannelPool getPool() {
-        if (pool == null) {
-            synchronized (ChannelPoolProvider.class) {
-                if (pool == null) {
-                    bootstrap.group(worker)
-                            .remoteAddress(new InetSocketAddress(properties.getHost(), properties.getPort()))
-                            .channel(NioSocketChannel.class)
-                            .option(ChannelOption.TCP_NODELAY, true)
-                            .option(ChannelOption.SO_KEEPALIVE, true);
-                    pool = new FixedChannelPool(bootstrap, new ClientChannelPoolHandler(),
-                            properties.getConnections());
-                }
-            }
-        }
         return pool;
     }
 

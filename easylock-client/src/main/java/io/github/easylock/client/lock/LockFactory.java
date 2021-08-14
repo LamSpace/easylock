@@ -16,15 +16,15 @@
 
 package io.github.easylock.client.lock;
 
-import io.github.easylock.common.request.Request;
-import io.github.easylock.common.type.Type;
+import io.github.easylock.common.core.Request;
+import io.github.easylock.common.type.LockType;
 
 /**
- * {@link LockFactory} generates an explicit {@link Lock} implementation with specified {@link Type}.
+ * {@link LockFactory} generates an explicit {@link Lock} implementation with specified {@link LockType}.
  * And {@link Request#key} should also be specified.
  * <p>
  * It is strongly recommended that generated lock should be transformed to specified type since
- * {@link #getLock(Type, String)} only returns an instance with type {@link Lock}, and methods of
+ * {@link #getLock(LockType, String)} only returns an instance with type {@link Lock}, and methods of
  * that instance can not be accessed publicly. Implementations of {@link Lock} overrides implicit
  * methods and modifiers also. For example,
  * <pre>
@@ -46,7 +46,8 @@ import io.github.easylock.common.type.Type;
  */
 public final class LockFactory {
 
-    public static Lock getLock(Type type, String key) {
+    // TODO: 2021/8/14 优化LockFactory 
+    public static Lock getLock(LockType lockType, String key) {
         return new SimpleLock(key);
     }
 

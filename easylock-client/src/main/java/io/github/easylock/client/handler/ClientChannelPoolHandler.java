@@ -19,6 +19,7 @@ package io.github.easylock.client.handler;
 import io.github.easylock.client.initializer.ClientChannelInitializer;
 import io.github.easylock.client.provider.ChannelPoolProvider;
 import io.github.easylock.client.receiver.ResponseReceiver;
+import io.github.easylock.common.util.Loggers;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.pool.ChannelPoolHandler;
@@ -45,23 +46,17 @@ public final class ClientChannelPoolHandler implements ChannelPoolHandler {
 
     @Override
     public void channelReleased(Channel channel) {
-        if (logger.isLoggable(Level.INFO)) {
-            logger.log(Level.INFO, "Channel released, channel id = " + channel.id());
-        }
+        Loggers.log(logger, Level.INFO, "Channel released, channel id = " + channel.id());
     }
 
     @Override
     public void channelAcquired(Channel channel) {
-        if (logger.isLoggable(Level.INFO)) {
-            logger.log(Level.INFO, "Channel acquired, channel id = " + channel.id());
-        }
+        Loggers.log(logger, Level.INFO, "Channel acquired, channel id = " + channel.id());
     }
 
     @Override
     public void channelCreated(Channel channel) {
-        if (logger.isLoggable(Level.INFO)) {
-            logger.log(Level.INFO, "Channel created, channel id = " + channel.id());
-        }
+        Loggers.log(logger, Level.INFO, "Channel created, channel id = " + channel.id());
         SocketChannel socketChannel = (SocketChannel) channel;
         socketChannel.pipeline()
                 .addLast(new ClientChannelInitializer(new ResponseReceiver()));

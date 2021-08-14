@@ -14,27 +14,35 @@
  *  limitations under the License.
  */
 
-package io.github.easylock.server.resolver;
-
+package io.github.easylock.client.constant;
 
 import io.github.easylock.common.core.Request;
-import io.github.easylock.common.core.Response;
 
 /**
- * {@link LockResolver} defines three operations to resolve {@code LockRequest} or {@code UnlockRequest}.
- * Any implementation of {@link LockResolver} should override these methods to resolve requests for
- * a certain type of lock.
+ * Enumerations for {@link Request} errors.
  *
  * @author Lam Tong
  * @version 1.0.0
  * @since 1.0.0
  */
-public interface LockResolver {
+public enum RequestError {
 
-    Response resolveTryLock(Request lockRequest);
+    EMPTY_LOCK_KEY("Lock key should not be null or empty, reset lock key."),
 
-    Response resolveLock(Request lockRequest);
+    LOCKING_ALREADY("Locking succeeds already, lock cancels."),
 
-    Response resolveUnlock(Request unlockRequest);
+    LOCKING_FAIL("Locking fails before, unlock cancels."),
+
+    UNLOCKING_ALREADY("Unlocking succeeds already, unlock cancels.");
+
+    private final String message;
+
+    RequestError(String message) {
+        this.message = message;
+    }
+
+    public String getMessage() {
+        return this.message;
+    }
 
 }

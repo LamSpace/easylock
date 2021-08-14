@@ -16,12 +16,9 @@
 
 package io.github.easylock.server.resolver;
 
-import io.github.easylock.common.request.LockRequest;
-import io.github.easylock.common.request.Request;
-import io.github.easylock.common.request.UnlockRequest;
-import io.github.easylock.common.response.LockResponse;
-import io.github.easylock.common.response.Response;
-import io.github.easylock.common.response.UnlockResponse;
+import io.github.easylock.common.core.Request;
+import io.github.easylock.common.core.Response;
+import io.github.easylock.common.type.RequestType;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,16 +29,16 @@ import java.util.concurrent.ConcurrentHashMap;
  * of {@link AbstractLockResolver} should not and also can not override {@link #resolve(Request)}.
  * <p>
  * As an abstract class, {@link AbstractLockResolver} contains some fields to support the process
- * of {@link LockRequest} and {@link UnlockRequest}, such as {@link #lockHolder}, {@link #lockMonitor}
+ * of {@code LockRequest} and {@code UnlockRequest}, such as {@link #lockHolder}, {@link #lockMonitor}
  * {@link #permissions} and {@link #requests}.
  * <p>
  * <b>Procedure of Locking</b>
  * <p>
  * Locking procedure is resolved by imitating via {@link #lockHolder} of type {@link ConcurrentHashMap},
  * which is the core of <code>lock resolver</code>. Generally, if one thread of any application succeeds
- * in acquiring the lock, other threads' {@link LockRequest} may fail unless that lock is released. When
- * resolving {@link LockRequest} with <code>lock</code> rather than <code>try-lock</code>, <b>BlockingQueue</b>
- * is used to resolve the blocking {@link LockRequest}s, waking up other waiting threads to acquire a
+ * in acquiring the lock, other threads' {@code LockRequest} may fail unless that lock is released. When
+ * resolving {@code LockRequest} with <code>lock</code> rather than <code>try-lock</code>, <b>BlockingQueue</b>
+ * is used to resolve the blocking {@code LockRequest}s, waking up other waiting threads to acquire a
  * permission for locking.
  *
  * @author Lam Tong
@@ -52,35 +49,44 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public abstract class AbstractLockResolver implements Resolver, LockResolver {
 
-    protected static final String SUCCEED = "", LOCKED_ALREADY = "Lock has been locked already.",
-            LOCK_EXPIRED = "Lock has expired already.";
+    protected static final String SUCCEED = "";
 
-    protected final ConcurrentHashMap<String, LockRequest> lockHolder = new ConcurrentHashMap<>();
+    protected static final String LOCKED_ALREADY = "Lock has been locked already.";
+
+    protected static final String LOCK_EXPIRED = "Lock has expired already.";
+
+    protected static final String SEPARATOR = "] - [";
+
+    protected final ConcurrentHashMap<String, Request> lockHolder = new ConcurrentHashMap<>();
 
     protected final Object lockMonitor = new Object();
 
-    protected final ConcurrentHashMap<String, BlockingQueue<Object>> requests = new ConcurrentHashMap<>(),
-            permissions = new ConcurrentHashMap<>();
+    protected final ConcurrentHashMap<String, BlockingQueue<Object>> requests = new ConcurrentHashMap<>();
+
+    protected final ConcurrentHashMap<String, BlockingQueue<Object>> permissions = new ConcurrentHashMap<>();
 
     @Override
     public final Response resolve(Request request) {
-        if (request instanceof LockRequest) {
-            LockRequest lockRequest = (LockRequest) request;
-            if (lockRequest.isTryLock()) {
-                return this.resolveTryLock(lockRequest);
+        if (request.getRequestType() == RequestType.LOCK_REQUEST) {
+            if (request.isTryLock()) {
+                return this.resolveTryLock(request);
             }
-            return this.resolveLock(lockRequest);
+            return this.resolveLock(request);
         }
-        return this.resolveUnlock(((UnlockRequest) request));
+        return this.resolveUnlock(request);
     }
 
     @Override
-    public abstract LockResponse resolveTryLock(LockRequest lockRequest);
+    public abstract Response resolveTryLock(Request lockRequest);
 
     @Override
-    public abstract LockResponse resolveLock(LockRequest lockRequest);
+    public abstract Response resolveLock(Request lockRequest);
 
     @Override
-    public abstract UnlockResponse resolveUnlock(UnlockRequest unlockRequest);
+    public abstract Response resolveUnlock(Request unlockRequest);
+
+    public abstract String acquireLock(Request request);
+
+    public abstract String releaseLock(Request request);
 
 }

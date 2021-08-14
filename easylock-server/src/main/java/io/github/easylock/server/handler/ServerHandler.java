@@ -16,8 +16,9 @@
 
 package io.github.easylock.server.handler;
 
-import io.github.easylock.common.request.Request;
-import io.github.easylock.common.response.Response;
+import io.github.easylock.common.core.Request;
+import io.github.easylock.common.core.Response;
+import io.github.easylock.common.util.Loggers;
 import io.github.easylock.server.resolver.RequestResolver;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -48,43 +49,34 @@ public final class ServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        if (logger.isLoggable(Level.SEVERE)) {
-            logger.log(Level.SEVERE, "A channel from client {" + ctx.channel().remoteAddress().toString() + "}" +
-                    " has inactivated, channel disconnects.");
-        }
+        Loggers.log(logger, Level.SEVERE, "A channel from client {" +
+                ctx.channel().remoteAddress().toString() + "}" +
+                " has inactivated, channel disconnects.");
         ctx.channel().close();
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
-        if (logger.isLoggable(Level.INFO)) {
-            logger.log(Level.INFO, "Server has activated a channel. Client address: " +
-                    ctx.channel().remoteAddress().toString());
-        }
+        Loggers.log(logger, Level.INFO, "Server has activated a channel. Client address: " +
+                ctx.channel().remoteAddress().toString());
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         Request request = ((Request) msg);
-        if (logger.isLoggable(Level.INFO)) {
-            logger.log(Level.INFO, "Server has received request from client ["
-                    + request.getApplicationName() + "]-[" + request.getThreadName() + "].");
-        }
+        Loggers.log(logger, Level.INFO, "Server has received request from client ["
+                + request.getApplication() + "]-[" + request.getThread() + "].");
         threads.execute(() -> {
             Response response = resolver.resolve(request);
             ctx.writeAndFlush(response);
-            if (logger.isLoggable(Level.INFO)) {
-                logger.log(Level.INFO, "Server has acknowledged request from client ["
-                        + request.getApplicationName() + "]-[" + request.getThreadName() + "].");
-            }
+            Loggers.log(logger, Level.INFO, "Server has acknowledged request from client ["
+                    + request.getApplication() + "]-[" + request.getThread() + "].");
         });
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        if (logger.isLoggable(Level.SEVERE)) {
-            logger.log(Level.SEVERE, "Exception occurs, caused by " + cause.getMessage());
-        }
+        Loggers.log(logger, Level.SEVERE, "Exception occurs, caused by " + cause.getMessage());
         ctx.channel().close();
     }
 

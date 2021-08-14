@@ -16,26 +16,24 @@
 
 package io.github.easylock.server.resolver;
 
-import io.github.easylock.common.request.LockRequest;
-import io.github.easylock.common.request.Request;
-import io.github.easylock.common.request.UnlockRequest;
-import io.github.easylock.common.response.Response;
-import io.github.easylock.common.type.Type;
+import io.github.easylock.common.core.Request;
+import io.github.easylock.common.core.Response;
+import io.github.easylock.common.type.LockType;
 
 /**
  * {@link RequestResolver} resolves lock or unlock requests for kinds of locks. Generally,
  * {@link RequestResolver} contains instances of {@link AbstractLockResolver} to resolve
- * requests via {@link Request#type}. For example, {@link RequestResolver} contains a static
- * field of type {@link SimpleLockResolver} to resolve requests for {@link Type#SIMPLE_LOCK}.
+ * requests via {@link Request#lockType}. For example, {@link RequestResolver} contains a static
+ * field of type {@link SimpleLockResolver} to resolve requests for {@link LockType#SIMPLE_LOCK}.
  * <p>
  * Note that instance of {@link RequestResolver} is often used to resolve received requests.
  * <ol>
  *     <li>Dispatches requests to corresponding <code>lock resolver</code> by invoking
  *     {@link AbstractLockResolver#resolve(Request)}.</li>
  *     <li>Resolves requests in a specified <code>lock resolver</code> by checking that if
- *     current {@link Request} is a {@link LockRequest} or {@link UnlockRequest} and if current
- *     {@link LockRequest} is a <code>try-lock</code> or not if current {@link Request} is a
- *     {@link LockRequest}.</li>
+ *     current {@link Request} is a {@code LockRequest} or {@code UnlockRequest} and if current
+ *     {@code LockRequest} is a <code>try-lock</code> or not if current {@link Request} is a
+ *     {@code LockRequest}.</li>
  * </ol>
  * <p>
  * Be aware that {@link AbstractLockResolver#resolve(Request)} defines a procedure to resolve
