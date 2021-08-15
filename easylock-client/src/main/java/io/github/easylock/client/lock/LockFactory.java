@@ -17,7 +17,6 @@
 package io.github.easylock.client.lock;
 
 import io.github.easylock.common.type.LockType;
-import io.github.easylock.common.util.Loggers;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -74,7 +73,9 @@ public final class LockFactory {
             t = constructor.newInstance(key);
         } catch (NoSuchMethodException | InstantiationException |
                 IllegalAccessException | InvocationTargetException e) {
-            Loggers.log(logger, Level.SEVERE, e.getMessage());
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, e.getMessage());
+            }
         }
         return t;
     }

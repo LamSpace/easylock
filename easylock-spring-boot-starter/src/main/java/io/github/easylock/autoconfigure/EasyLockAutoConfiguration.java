@@ -17,10 +17,12 @@
 package io.github.easylock.autoconfigure;
 
 import io.github.easylock.autoconfigure.aspect.SimpleLockAspect;
+import io.github.easylock.client.lock.LockFactory;
 import io.github.easylock.client.property.ClientProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
@@ -59,6 +61,11 @@ public class EasyLockAutoConfiguration {
 
     @Autowired
     private Environment environment;
+
+    @Bean
+    public LockFactory getFactory() {
+        return new LockFactory();
+    }
 
     @PostConstruct
     public void setClientProperties() {
