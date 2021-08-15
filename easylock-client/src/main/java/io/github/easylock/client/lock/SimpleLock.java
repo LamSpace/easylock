@@ -23,7 +23,6 @@ import io.github.easylock.common.core.Request;
 import io.github.easylock.common.core.Response;
 import io.github.easylock.common.type.LockType;
 import io.github.easylock.common.type.RequestType;
-import io.github.easylock.common.util.Loggers;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -82,12 +81,16 @@ public final class SimpleLock extends Lock {
     private boolean doLock(boolean tryLock) {
         if (!this.validateKey()) {
             // If lock key is not available, then returns false immediately.
-            Loggers.log(logger, Level.INFO, RequestError.EMPTY_LOCK_KEY.getMessage());
+            if (logger.isLoggable(Level.INFO)) {
+                logger.log(Level.INFO, RequestError.EMPTY_LOCK_KEY.getMessage());
+            }
             return false;
         }
         if (!this.canLock()) {
             // If this lock instance has been locked successfully before, then returns false immediately.
-            Loggers.log(logger, Level.INFO, RequestError.LOCKING_ALREADY.getMessage());
+            if (logger.isLoggable(Level.INFO)) {
+                logger.log(Level.INFO, RequestError.LOCKING_ALREADY.getMessage());
+            }
             return false;
         }
         Request request = new Request(this.getKey(), properties.getApplication(),
@@ -109,12 +112,16 @@ public final class SimpleLock extends Lock {
     public boolean unlock() {
         if (!this.success()) {
             // If this lock instance has not been locked successfully before, then returns immediately.
-            Loggers.log(logger, Level.INFO, RequestError.LOCKING_FAIL.getMessage());
+            if (logger.isLoggable(Level.INFO)) {
+                logger.log(Level.INFO, RequestError.LOCKING_FAIL.getMessage());
+            }
             return false;
         }
         if (!this.canUnlock()) {
             // If this lock instance has been unlocked, then returns immediately.
-            Loggers.log(logger, Level.INFO, RequestError.UNLOCKING_ALREADY.getMessage());
+            if (logger.isLoggable(Level.INFO)) {
+                logger.log(Level.INFO, RequestError.UNLOCKING_ALREADY.getMessage());
+            }
             return false;
         }
         Request request = new Request(this.getKey(), properties.getApplication(),

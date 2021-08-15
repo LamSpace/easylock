@@ -18,7 +18,6 @@ package io.github.easylock.autoconfigure;
 
 import io.github.easylock.autoconfigure.aspect.SimpleLockAspect;
 import io.github.easylock.client.property.ClientProperties;
-import io.github.easylock.common.util.Loggers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -74,7 +73,9 @@ public class EasyLockAutoConfiguration {
         clientProperties.setPort(this.properties.getServerPort());
         clientProperties.setConnections(this.properties.getChannelConnections());
         clientProperties.setQueueSize(this.properties.getCacheQueueSize());
-        Loggers.log(logger, Level.INFO, "Properties for client and server has been updated.");
+        if (logger.isLoggable(Level.INFO)) {
+            logger.log(Level.INFO, "Properties for client and server has been updated.");
+        }
     }
 
 }

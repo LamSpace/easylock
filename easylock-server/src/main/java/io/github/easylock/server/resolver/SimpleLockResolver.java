@@ -19,7 +19,6 @@ package io.github.easylock.server.resolver;
 import io.github.easylock.common.core.Request;
 import io.github.easylock.common.core.Response;
 import io.github.easylock.common.type.ResponseType;
-import io.github.easylock.common.util.Loggers;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -57,7 +56,9 @@ public final class SimpleLockResolver extends AbstractLockResolver {
             synchronized (this.lockMonitor) {
                 if (!this.lockHolder.containsKey(key)) {
                     this.lockHolder.put(key, lockRequest);
-                    Loggers.log(logger, Level.INFO, acquireLock(lockRequest));
+                    if (logger.isLoggable(Level.INFO)) {
+                        logger.log(Level.INFO, acquireLock(lockRequest));
+                    }
                     return new Response(key, lockRequest.getIdentity(), true, SUCCEED,
                             ResponseType.LOCK_RESPONSE);
                 }
@@ -75,7 +76,9 @@ public final class SimpleLockResolver extends AbstractLockResolver {
             synchronized (this.lockMonitor) {
                 if (!this.lockHolder.containsKey(key)) {
                     this.lockHolder.put(key, lockRequest);
-                    Loggers.log(logger, Level.INFO, acquireLock(lockRequest));
+                    if (logger.isLoggable(Level.INFO)) {
+                        logger.log(Level.INFO, acquireLock(lockRequest));
+                    }
                     return new Response(key, lockRequest.getIdentity(),
                             true, SUCCEED, ResponseType.LOCK_RESPONSE);
                 }
@@ -88,10 +91,14 @@ public final class SimpleLockResolver extends AbstractLockResolver {
             this.permissions.get(key).take();
             this.lockHolder.put(key, lockRequest);
         } catch (InterruptedException e) {
-            Loggers.log(logger, Level.SEVERE, e.getMessage());
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, e.getMessage());
+            }
             Thread.currentThread().interrupt();
         }
-        Loggers.log(logger, Level.INFO, acquireLock(lockRequest));
+        if (logger.isLoggable(Level.INFO)) {
+            logger.log(Level.INFO, acquireLock(lockRequest));
+        }
         return new Response(key, lockRequest.getIdentity(),
                 true, SUCCEED, ResponseType.LOCK_RESPONSE);
     }
@@ -100,14 +107,18 @@ public final class SimpleLockResolver extends AbstractLockResolver {
     public Response resolveUnlock(Request unlockRequest) {
         String key = unlockRequest.getKey();
         this.lockHolder.remove(key);
-        Loggers.log(logger, Level.INFO, releaseLock(unlockRequest));
+        if (logger.isLoggable(Level.INFO)) {
+            logger.log(Level.INFO, releaseLock(unlockRequest));
+        }
         try {
             if (this.requests.containsKey(key) && !this.requests.get(key).isEmpty()) {
                 this.requests.get(key).take();
                 this.permissions.get(key).put(new Object());
             }
         } catch (InterruptedException e) {
-            Loggers.log(logger, Level.SEVERE, e.getMessage());
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, e.getMessage());
+            }
             Thread.currentThread().interrupt();
         }
         return new Response(key, unlockRequest.getIdentity(),

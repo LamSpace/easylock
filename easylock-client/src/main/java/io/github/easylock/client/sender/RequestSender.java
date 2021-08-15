@@ -54,6 +54,7 @@ public final class RequestSender {
     }
 
     public Response send(Request request) {
+        // TODO: 2021/8/15 需要更新请求类型来判断是否是加锁请求
         final String key = request.getKey();
         final int identity = request.getIdentity();
         final FixedChannelPool pool = ChannelPoolProvider.getPool();

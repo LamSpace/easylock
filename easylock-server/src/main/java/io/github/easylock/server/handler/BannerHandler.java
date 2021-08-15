@@ -16,8 +16,6 @@
 
 package io.github.easylock.server.handler;
 
-import io.github.easylock.common.util.Loggers;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -51,7 +49,7 @@ public final class BannerHandler {
     }
 
     private void displayDefaultBanner() {
-        Loggers.log(logger, Level.INFO,
+        logger.log(Level.INFO,
                 "\n           _                                     _                             \n" +
                         "         /' `\\                                 /~_)                      /'  _/\n" +
                         "       /'   ._)                            ~-/'-~                      /' _/~  \n" +
@@ -76,9 +74,11 @@ public final class BannerHandler {
                 sb.append(new String(bytes, 0, len));
             }
         } catch (IOException e) {
-            Loggers.log(logger, Level.SEVERE, e.getMessage());
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, e.getMessage());
+            }
         }
-        Loggers.log(logger, Level.INFO, sb.toString());
+        logger.log(Level.INFO, sb.toString());
     }
 
 }

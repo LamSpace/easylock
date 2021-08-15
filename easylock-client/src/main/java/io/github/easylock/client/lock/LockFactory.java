@@ -16,27 +16,23 @@
 
 package io.github.easylock.client.lock;
 
-import io.github.easylock.common.core.Request;
 import io.github.easylock.common.type.LockType;
+import io.github.easylock.common.util.Loggers;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
- * {@link LockFactory} generates an explicit {@link Lock} implementation with specified {@link LockType}.
- * And {@link Request#key} should also be specified.
+ * {@link LockFactory} tries to generate an instance of specified lock by
+ * <ol>
+ *     <li>{@link #forLock(LockType, String)} with specified {@link LockType}, or</li>
+ *     <li>{@link #forLock(Class, String)} with specified lock class object.</li>
+ * </ol>
  * <p>
- * It is strongly recommended that generated lock should be transformed to specified type since
- * {@link #getLock(LockType, String)} only returns an instance with type {@link Lock}, and methods of
- * that instance can not be accessed publicly. Implementations of {@link Lock} overrides implicit
- * methods and modifiers also. For example,
- * <pre>
- *     {@code
- * SimpleLock lock = ((SimpleLock) LockFactory.getLock(Type.SimpleLock, "aaa"));
- * ...
- * lock.lock();
- * ...
- * lock.unlock();
- * ...
- *     }
- * </pre>
+ * Besides, {@link LockFactory} provides explicit methods to generate specified locks.
+ * For example, {@link #forSimpleLock(String)} retrieves an instance of type {@link SimpleLock}.
  *
  * @author Lam Tong
  * @version 1.0.0
@@ -46,8 +42,50 @@ import io.github.easylock.common.type.LockType;
  */
 public final class LockFactory {
 
-    // TODO: 2021/8/14 优化LockFactory 
-    public static Lock getLock(LockType lockType, String key) {
+    private static final Logger logger = Logger.getLogger(LockFactory.class.getName());
+
+    /**
+     * Retrieves a lock instance by {@link LockType}.
+     *
+     * @param type lock type.
+     * @param key  lock key.
+     * @return a lock instance.
+     */
+    public Lock forLock(LockType type, String key) {
+        // In the future, <code>if</code> block should be replaced with <code>switch</code>
+        if (type == LockType.SIMPLE_LOCK) {
+            return new SimpleLock(key);
+        }
+        return null;
+    }
+
+    /**
+     * Retrieves a lock instance by <code>Reflection</code>.
+     *
+     * @param clazz specified lock class object.
+     * @param key   lock key.
+     * @param <T>   object inheriting class {@link Lock}.
+     * @return a lock instance.
+     */
+    public <T> T forLock(Class<T> clazz, String key) {
+        T t = null;
+        try {
+            Constructor<T> constructor = clazz.getDeclaredConstructor(String.class);
+            t = constructor.newInstance(key);
+        } catch (NoSuchMethodException | InstantiationException |
+                IllegalAccessException | InvocationTargetException e) {
+            Loggers.log(logger, Level.SEVERE, e.getMessage());
+        }
+        return t;
+    }
+
+    /**
+     * Retrieves an instance of type {@link SimpleLock}.
+     *
+     * @param key lock key.
+     * @return an instance of type {@link SimpleLock}.
+     */
+    public SimpleLock forSimpleLock(String key) {
         return new SimpleLock(key);
     }
 

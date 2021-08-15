@@ -16,7 +16,6 @@
 
 package io.github.easylock.server.handler;
 
-import io.github.easylock.common.util.Loggers;
 import io.github.easylock.server.property.ServerProperties;
 
 import java.util.Arrays;
@@ -49,7 +48,9 @@ public final class PropertiesHandler {
     private static final Logger logger = Logger.getLogger(PropertiesHandler.class.getName());
 
     public void handleProperties(String[] args) {
-        Loggers.log(logger, Level.INFO, "Properties handled - " + Arrays.toString(args));
+        if (logger.isLoggable(Level.INFO)) {
+            logger.log(Level.INFO, "Properties handled - {0}", Arrays.toString(args));
+        }
     }
 
 }

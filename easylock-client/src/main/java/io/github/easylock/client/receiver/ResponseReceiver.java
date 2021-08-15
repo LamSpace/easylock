@@ -18,7 +18,6 @@ package io.github.easylock.client.receiver;
 
 import io.github.easylock.client.cache.ResponseCache;
 import io.github.easylock.common.core.Response;
-import io.github.easylock.common.util.Loggers;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
@@ -41,29 +40,39 @@ public final class ResponseReceiver extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
-        Loggers.log(logger, Level.INFO, "Channel is active, address: " + ctx.channel().remoteAddress().toString());
+        if (logger.isLoggable(Level.INFO)) {
+            logger.log(Level.INFO, "Channel is active, address: {0}", ctx.channel().remoteAddress());
+        }
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        Loggers.log(logger, Level.WARNING, "Channel is inactive, address: " + ctx.channel().remoteAddress().toString());
+        if (logger.isLoggable(Level.WARNING)) {
+            logger.log(Level.WARNING, "Channel is inactive, address: {0}", ctx.channel().remoteAddress());
+        }
         ctx.channel().close();
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        Loggers.log(logger, Level.INFO, "[" + Thread.currentThread().getName() + "] - acquires a response from server.");
+        if (logger.isLoggable(Level.INFO)) {
+            logger.log(Level.INFO, "[{0}] - acquires a response from server.", Thread.currentThread().getName());
+        }
         cache.put(((Response) msg));
     }
 
     @Override
     public void channelUnregistered(ChannelHandlerContext ctx) {
-        Loggers.log(logger, Level.INFO, "Connection to server has not been established.");
+        if (logger.isLoggable(Level.INFO)) {
+            logger.log(Level.INFO, "Connection to server has not been established.");
+        }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        Loggers.log(logger, Level.WARNING, "Exception occurs, caused by " + cause.getMessage());
+        if (logger.isLoggable(Level.WARNING)) {
+            logger.log(Level.WARNING, "Exception occurs, caused by {0}", cause.getMessage());
+        }
         ctx.channel().close();
     }
 

@@ -16,7 +16,6 @@
 
 package io.github.easylock.server.launcher;
 
-import io.github.easylock.common.util.Loggers;
 import io.github.easylock.server.initializer.ServerChannelInitializer;
 import io.github.easylock.server.property.Properties;
 import io.github.easylock.server.property.ServerProperties;
@@ -46,7 +45,9 @@ public final class ServerLauncher implements Launcher {
 
     @Override
     public void launch(Properties properties) {
-        Loggers.log(logger, Level.INFO, "Starts to launch easylock server.");
+        if (logger.isLoggable(Level.INFO)) {
+            logger.log(Level.INFO, "Starts to launch easylock server.");
+        }
         ServerProperties serverProperties = (ServerProperties) properties;
         EventLoopGroup boss = new NioEventLoopGroup();
         EventLoopGroup worker = new NioEventLoopGroup();
@@ -58,10 +59,14 @@ public final class ServerLauncher implements Launcher {
                     .childOption(ChannelOption.SO_KEEPALIVE, true)
                     .childHandler(new ServerChannelInitializer());
             ChannelFuture future = bootstrap.bind(serverProperties.getPort()).sync();
-            Loggers.log(logger, Level.INFO, "Easylock server is launched, listening at port " + serverProperties.getPort());
+            if (logger.isLoggable(Level.INFO)) {
+                logger.log(Level.INFO, "Easylock server is launched, listening at port {0}", serverProperties.getPort());
+            }
             future.channel().closeFuture().sync();
         } catch (InterruptedException e) {
-            Loggers.log(logger, Level.SEVERE, e.getMessage());
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, e.getMessage());
+            }
             Thread.currentThread().interrupt();
         } finally {
             boss.shutdownGracefully();

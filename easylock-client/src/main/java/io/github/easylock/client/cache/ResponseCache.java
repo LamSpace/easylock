@@ -19,7 +19,6 @@ package io.github.easylock.client.cache;
 import io.github.easylock.client.property.ClientProperties;
 import io.github.easylock.common.core.Request;
 import io.github.easylock.common.core.Response;
-import io.github.easylock.common.util.Loggers;
 
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -91,7 +90,9 @@ public final class ResponseCache {
                     try {
                         response = queue.take();
                     } catch (InterruptedException e) {
-                        Loggers.log(logger, Level.SEVERE, e.getMessage());
+                        if (logger.isLoggable(Level.SEVERE)) {
+                            logger.log(Level.SEVERE, e.getMessage());
+                        }
                         Thread.currentThread().interrupt();
                     }
                     return response;
@@ -110,7 +111,9 @@ public final class ResponseCache {
         try {
             this.cachePool.get(key).put(response);
         } catch (InterruptedException e) {
-            Loggers.log(logger, Level.SEVERE, e.getMessage());
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, e.getMessage());
+            }
             Thread.currentThread().interrupt();
         }
     }
