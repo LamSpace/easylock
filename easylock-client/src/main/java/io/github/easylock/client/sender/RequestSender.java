@@ -34,7 +34,6 @@ import java.util.logging.Logger;
  *
  * @author Lam Tong
  * @version 1.0.0
- * @see Cloneable
  * @see Request
  * @see Response
  * @since 1.0.0
@@ -54,8 +53,8 @@ public final class RequestSender {
     }
 
     public Response send(Request request) {
-        // TODO: 2021/8/15 需要更新请求类型来判断是否是加锁请求
         final String key = request.getKey();
+        final RequestType requestType = request.getRequestType();
         final int identity = request.getIdentity();
         final FixedChannelPool pool = ChannelPoolProvider.getPool();
         final ResponseCache cache = ResponseCache.getCache();
@@ -68,7 +67,7 @@ public final class RequestSender {
             } else {
                 // Fails to acquire a channel, maybe the client fails to connect to server, or network breakdown.
                 // Thus requests cancel and responses are created at client to answer the requests.
-                if (request.getRequestType() == RequestType.LOCK_REQUEST) {
+                if (requestType == RequestType.LOCK_REQUEST) {
                     cache.put(new Response(key, identity, false,
                             "Connection to server fails, lock request cancelled",
                             ResponseType.LOCK_RESPONSE));
@@ -79,15 +78,16 @@ public final class RequestSender {
                 }
             }
         });
+        //
         // After sending the request successfully, current thread will try to retrieve corresponding
         // response from {@link ResponseCache} in pooling if the request is resolved at server and
         // corresponding response arrives and is stored in {@link ResponseCache}.
         //
         //     1.Current thread will check that if there exist a response whose key is the same as
-        //       that of the request sends before, and if does, then go to the next step; otherwise,
+        //       that of the request sends before, and if it does, then go to the next step; otherwise,
         //       continue current step.
         //     2.Current thread will check the identity of the received response with that of the
-        //       the request sends before. If there exists a response whose identity is the same as
+        //       request sends before. If there exists a response whose identity is the same as
         //       the request sends before, then current response in {@link ResponseCache} can be
         //       acquired with specified key and returned.
         //
@@ -95,7 +95,10 @@ public final class RequestSender {
         for (; ; ) {
             Response res;
             //noinspection StatementWithEmptyBody
-            while ((res = cache.peek(key)) == null) ;
+            while ((res = cache.peek(key)) == null ||
+                    (res.getResponseType() == ResponseType.LOCK_RESPONSE && requestType == RequestType.UNLOCK_REQUEST) ||
+                    (res.getResponseType() == ResponseType.UNLOCK_RESPONSE && requestType == RequestType.LOCK_REQUEST)) {
+            }
             if (res.getIdentity() == identity) {
                 response = cache.take(key);
                 break;
