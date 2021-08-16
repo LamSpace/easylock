@@ -30,6 +30,8 @@ This repository consists of four modules till now, which are **easylock-client**
 > demonstration of **Netty**. I hope this repository can give you some inspirations to create amazing masterpieces.
 >
 > If you have any questions, feel free to commit your issues or contact me with **lemonlovepy@163.com**.
+>
+> For more information, please go to **wiki**.
 
 ***
 
