@@ -38,6 +38,19 @@
         <spring-boot.version>2.5.2</spring-boot.version>
     </properties>
 
+    <name>easylock</name>
+    <description>EasyLock aims to provide fundamental usage of distributed lock, based on Netty. which makes it easy for
+        access control of shared resources.
+    </description>
+    <url>https://github.com/LamTong/easylock</url>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
     <scm>
         <tag>master</tag>
         <url>git@github.com:LamTong/easylock.git</url>
