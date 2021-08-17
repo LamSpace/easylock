@@ -20,7 +20,7 @@ set lib=.;../lib/easylock-common-1.0.0.jar;../lib/netty-all-4.1.6.Final.jar;
 
 set conf=../conf
 
-set application=EasyLockApplication
+set application=io.github.lamtong.easylock.server.EasyLockApplication
 
 set serverPort=40417
 
