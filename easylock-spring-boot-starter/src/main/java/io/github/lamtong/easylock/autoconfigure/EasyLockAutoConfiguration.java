@@ -91,9 +91,12 @@ public class EasyLockAutoConfiguration {
      * Connects the server automatically after client's properties is set.
      */
     private void connect() {
-        SimpleLock lock = getFactory().forSimpleLock(() -> "_auto_connect");
-        lock.lock();
-        lock.unlock();
+        LockFactory factory = getFactory();
+        for (int connections = ClientProperties.getProperties().getConnections(), i = 0; i < connections; i++) {
+            SimpleLock lock = factory.forSimpleLock(() -> "_auto_connect");
+            lock.lock();
+            lock.unlock();
+        }
     }
 
 }

@@ -55,9 +55,6 @@ public final class ResponseReceiver extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        if (logger.isLoggable(Level.INFO)) {
-            logger.log(Level.INFO, "[{0}] - acquires a response from server.", Thread.currentThread().getName());
-        }
         cache.put(((Response) msg));
     }
 

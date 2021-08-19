@@ -66,10 +66,6 @@ public final class ServerHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         Request request = ((Request) msg);
-        if (logger.isLoggable(Level.INFO)) {
-            logger.log(Level.INFO, "Server has received request from client [{0}]-[{1}].",
-                    new Object[]{request.getApplication(), request.getThread()});
-        }
         /*
          * Here is the core and entry to resolve lock and unlock requests. The thinking of this core is to
          * simulate the process of lock and unlock by multiple threads in a thread pool, which is to say that
@@ -80,10 +76,6 @@ public final class ServerHandler extends ChannelInboundHandlerAdapter {
         threads.execute(() -> {
             Response response = resolver.resolve(request);
             ctx.writeAndFlush(response);
-            if (logger.isLoggable(Level.INFO)) {
-                logger.log(Level.INFO, "Server has acknowledged request from client [{0}]-[{1}].",
-                        new Object[]{request.getApplication(), request.getThread()});
-            }
         });
     }
 

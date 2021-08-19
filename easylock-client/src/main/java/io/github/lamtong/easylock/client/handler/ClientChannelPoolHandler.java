@@ -45,16 +45,12 @@ public final class ClientChannelPoolHandler implements ChannelPoolHandler {
 
     @Override
     public void channelReleased(Channel channel) {
-        if (logger.isLoggable(Level.INFO)) {
-            logger.log(Level.INFO, "Channel released, channel id = {0}", channel.id());
-        }
+        // Ignore channel released information.
     }
 
     @Override
     public void channelAcquired(Channel channel) {
-        if (logger.isLoggable(Level.INFO)) {
-            logger.log(Level.INFO, "Channel acquired, channel id = {0}", channel.id());
-        }
+        // Ignore channel acquired information.
     }
 
     @Override
