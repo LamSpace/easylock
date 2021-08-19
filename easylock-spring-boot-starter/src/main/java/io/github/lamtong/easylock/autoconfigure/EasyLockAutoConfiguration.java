@@ -18,6 +18,7 @@ package io.github.lamtong.easylock.autoconfigure;
 
 import io.github.lamtong.easylock.autoconfigure.aspect.SimpleLockAspect;
 import io.github.lamtong.easylock.client.lock.LockFactory;
+import io.github.lamtong.easylock.client.lock.SimpleLock;
 import io.github.lamtong.easylock.client.property.ClientProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -83,6 +84,16 @@ public class EasyLockAutoConfiguration {
         if (logger.isLoggable(Level.INFO)) {
             logger.log(Level.INFO, "Properties for client and server has been updated.");
         }
+        connect();
+    }
+
+    /**
+     * Connects the server automatically after client's properties is set.
+     */
+    private void connect() {
+        SimpleLock lock = getFactory().forSimpleLock(() -> "_auto_connect");
+        lock.lock();
+        lock.unlock();
     }
 
 }

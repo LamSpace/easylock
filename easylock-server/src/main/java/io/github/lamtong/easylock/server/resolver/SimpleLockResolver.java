@@ -134,7 +134,7 @@ public final class SimpleLockResolver extends AbstractLockResolver {
     @Override
     public String releaseLock(Request request) {
         return "[" + request.getApplication() + SEPARATOR + request.getThread() +
-                "] acquires SimpleLock successfully";
+                "] releases SimpleLock successfully";
     }
 
 }
