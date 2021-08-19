@@ -30,6 +30,8 @@ import org.springframework.core.env.Environment;
 
 import javax.annotation.PostConstruct;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -91,11 +93,14 @@ public class EasyLockAutoConfiguration {
      * Connects the server automatically after client's properties is set.
      */
     private void connect() {
-        LockFactory factory = getFactory();
+        final LockFactory factory = getFactory();
+        final ExecutorService pool = Executors.newCachedThreadPool();
         for (int connections = ClientProperties.getProperties().getConnections(), i = 0; i < connections; i++) {
-            SimpleLock lock = factory.forSimpleLock(() -> "_auto_connect");
-            lock.lock();
-            lock.unlock();
+            pool.execute(() -> {
+                final SimpleLock lock = factory.forSimpleLock(() -> "_auto_connect");
+                lock.lock();
+                lock.unlock();
+            });
         }
     }
 
