@@ -34,7 +34,7 @@ import java.util.logging.Logger;
  * is required to initialize the channel.
  *
  * @author Lam Tong
- * @version 1.0.0
+ * @version 1.1.0
  * @see ChannelPoolProvider
  * @see ClientChannelInitializer
  * @since 1.0.0

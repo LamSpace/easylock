@@ -29,7 +29,7 @@ import java.util.logging.Logger;
  * receive and handle responses from server for each channel.
  *
  * @author Lam Tong
- * @version 1.0.0
+ * @version 1.1.0
  * @since 1.0.0
  */
 public final class ResponseReceiver extends ChannelInboundHandlerAdapter {

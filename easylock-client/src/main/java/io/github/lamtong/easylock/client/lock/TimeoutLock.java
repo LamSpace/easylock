@@ -24,62 +24,79 @@ import io.github.lamtong.easylock.common.core.Response;
 import io.github.lamtong.easylock.common.type.LockType;
 import io.github.lamtong.easylock.common.type.RequestType;
 
+import java.util.concurrent.DelayQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * {@link SimpleLock} is an implementation of {@link Lock}.
+ * Implementation of {@link Lock}, supporting expiration usage.
  * <p>
- * <b>No Support for Repeatable Usage</b>
+ * {@link TimeoutLock} indicates that when locking succeeds by {@link #tryLock(long, TimeUnit)} or
+ * {@link #lock(long, TimeUnit)}, an expiration message will be added into an instance of Type
+ * {@link DelayQueue} at server. When an expiration message is taken from that {@link DelayQueue}
+ * instance, corresponding lock will be removed. Here, an expiration implies the maximum duration for
+ * access control of shared resources protected by this lock resource for clients. Once this lock
+ * resource expires, shared resources will no longer be protected since this lock is released at server.
+ * Any other threads may acquire the lock resource and {@link #unlock()} fails with the same reason but
+ * does not throw an exception.
  * <p>
- * Generally, {@link SimpleLock} is a fundamental implementation of {@link Lock}. Instance of
- * {@link SimpleLock} can only acquires the lock at most once successfully. Namely, if {@link #tryLock()}
- * returns <code>true</code>, then {@link #lock()} returns immediately. Even {@link #unlock()} is
- * invoked successfully and the lock is released, invocation of {@link #lock()} and {@link #tryLock()}
- * never acquires the lock since that lock instance has been consumed already.
+ * It is recommended that the expiration should be greater that duration to access the shared resources
+ * slightly but not too great.
  * <p>
  * <b>No Support for Reentrant Usage</b>
  * <p>
- * {@link SimpleLock} provides no support for <code>reentrant usage</code>, which means that
- * if current thread acquires the lock successfully, then any invocation of {@link #tryLock()} or
- * {@link #lock()} will fail.
+ * {@link TimeoutLock} does not support for reentrant usage, indicating that this lock resource can only
+ * be acquired once.
  * <p>
- * <b>No Support for Expiration</b>
- * <p>
- * {@link SimpleLock} does not contains an expiration, implying that if a lock holder does not
- * unlock the lock for some reasons, for example, exceptions are thrown in the scope protected by the
- * lock instance or forget to unlock the lock, then the lock will be hold at server forever such that
- * other threads gains no chances to acquire the lock unless the lock is released at server manually.
  *
  * @author Lam Tong
  * @version 1.1.0
  * @see Lock
- * @since 1.0.0
+ * @since 1.1.0
  */
 @SuppressWarnings(value = {"Duplicates"})
-public final class SimpleLock extends Lock {
+public class TimeoutLock extends Lock {
 
-    private static final Logger logger = Logger.getLogger(SimpleLock.class.getName());
+    private static final Logger logger = Logger.getLogger(TimeoutLock.class.getName());
 
     private static final ClientProperties properties = ClientProperties.getProperties();
 
     private static final RequestSender sender = RequestSender.getSender();
 
-    SimpleLock(String key) {
+    TimeoutLock(String key) {
         super(key);
     }
 
-    @Override
-    public boolean tryLock() {
-        return this.doLock(true);
+    /**
+     * Tries to acquire the lock and returns true if and only if the lock resource is available at
+     * server with specified expiration. If the lock resource is not available then this method
+     * returns false immediately. Namely, this method does only send a lock request to server once
+     * and acquires a lock response immediately, representing whether locking operation succeeds or not.
+     *
+     * @param time     expiration time
+     * @param timeUnit unit for expiration time
+     * @return true if and only if the lock resource if available; otherwise, returns false.
+     */
+    public boolean tryLock(long time, TimeUnit timeUnit) {
+        return doLock(true, time, timeUnit);
     }
 
-    @Override
-    public boolean lock() {
-        return this.doLock(false);
+    /**
+     * Acquires the lock resource with blocking attempt
+     * <p>
+     * If the lock resource is not available then this lock request will block until the lock resource
+     * is available and always returns true, which means this method never fails.
+     *
+     * @param time     expiration time
+     * @param timeUnit unit for expiration time
+     * @return true always
+     */
+    public boolean lock(long time, TimeUnit timeUnit) {
+        return doLock(false, time, timeUnit);
     }
 
-    private boolean doLock(boolean tryLock) {
+    public boolean doLock(boolean tryLock, long time, TimeUnit timeUnit) {
         if (!this.validateKey()) {
             // If lock key is not available, then returns false immediately.
             if (logger.isLoggable(Level.INFO)) {
@@ -95,8 +112,8 @@ public final class SimpleLock extends Lock {
             return false;
         }
         Request request = new Request(this.getKey(), properties.getApplication(),
-                Thread.currentThread().getName(), LockType.SIMPLE_LOCK, RequestType.LOCK_REQUEST,
-                tryLock);
+                Thread.currentThread().getName(), LockType.TIMEOUT_LOCK, RequestType.LOCK_REQUEST,
+                tryLock, time, timeUnit);
         Response response = sender.send(request);
         if (response.isSuccess()) {
 //             There are two cases that this code will be executed.
@@ -107,6 +124,26 @@ public final class SimpleLock extends Lock {
             this.setSuccess(true);
         }
         return response.isSuccess();
+    }
+
+    /**
+     * Overloaded by {@link #tryLock(long, TimeUnit)} to provide an extra functionality of expiration.
+     *
+     * @return false cause this method will not be invoked by clients.
+     */
+    @Override
+    protected boolean tryLock() {
+        return false;
+    }
+
+    /**
+     * Overloaded by {@link #lock(long, TimeUnit)} to provide an extra functionality of expiration.
+     *
+     * @return false cause this method will not be invoked by clients.
+     */
+    @Override
+    protected boolean lock() {
+        return false;
     }
 
     @Override
@@ -126,7 +163,7 @@ public final class SimpleLock extends Lock {
             return false;
         }
         Request request = new Request(this.getKey(), properties.getApplication(),
-                Thread.currentThread().getName(), LockType.SIMPLE_LOCK, RequestType.UNLOCK_REQUEST);
+                Thread.currentThread().getName(), LockType.TIMEOUT_LOCK, RequestType.UNLOCK_REQUEST);
         Response response = sender.send(request);
         if (response.isSuccess()) {
             // Generally, unlock() always returns true.

@@ -31,7 +31,7 @@ import java.util.logging.Logger;
  * {@link AbstractLockResolver#resolve(Request)} has already define a template to resolve requests.
  *
  * @author Lam Tong
- * @version 1.0.0
+ * @version 1.1.0
  * @see AbstractLockResolver
  * @since 1.0.0
  */
@@ -104,6 +104,7 @@ public final class SimpleLockResolver extends AbstractLockResolver {
     }
 
     @Override
+    @SuppressWarnings(value = {"Duplicates"})
     public Response resolveUnlock(Request unlockRequest) {
         String key = unlockRequest.getKey();
         this.lockHolder.remove(key);
@@ -128,13 +129,13 @@ public final class SimpleLockResolver extends AbstractLockResolver {
     @Override
     public String acquireLock(Request request) {
         return "[" + request.getApplication() + SEPARATOR + request.getThread() +
-                "] acquires SimpleLock successfully";
+                "] acquires SimpleLock successfully.";
     }
 
     @Override
     public String releaseLock(Request request) {
         return "[" + request.getApplication() + SEPARATOR + request.getThread() +
-                "] releases SimpleLock successfully";
+                "] releases SimpleLock successfully.";
     }
 
 }

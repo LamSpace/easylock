@@ -50,9 +50,14 @@ public final class RequestResolver implements Resolver {
 
     private static final SimpleLockResolver simpleLock = SimpleLockResolver.getResolver();
 
+    private static final TimeoutLockResolver timeoutLock = TimeoutLockResolver.getResolver();
+
     @Override
     public Response resolve(Request request) {
-        return simpleLock.resolve(request);
+        if (request.getLockType() == LockType.TIMEOUT_LOCK)
+            return timeoutLock.resolve(request);
+        else
+            return simpleLock.resolve(request);
     }
 
 }

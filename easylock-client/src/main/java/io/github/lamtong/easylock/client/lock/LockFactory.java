@@ -35,9 +35,10 @@ import java.util.logging.Logger;
  * For example, {@link #forSimpleLock(String)} retrieves an instance of type {@link SimpleLock}.
  *
  * @author Lam Tong
- * @version 1.0.0
+ * @version 1.1.0
  * @see Lock
  * @see SimpleLock
+ * @see TimeoutLock
  * @since 1.0.0
  */
 public final class LockFactory {
@@ -99,6 +100,26 @@ public final class LockFactory {
      */
     public SimpleLock forSimpleLock(Supplier<String> supplier) {
         return new SimpleLock(supplier.get());
+    }
+
+    /**
+     * Retrieves an instance of type {@link TimeoutLock}.
+     *
+     * @param key lock key.
+     * @return an instance of type {@link TimeoutLock}.
+     */
+    public TimeoutLock forTimeoutLock(String key) {
+        return new TimeoutLock(key);
+    }
+
+    /**
+     * Retrieves an instance of type {@link TimeoutLock} using a functional interface {@link Supplier}.
+     *
+     * @param supplier provides a key for an instance of {@link TimeoutLock}.
+     * @return an instance of type {@link TimeoutLock}.
+     */
+    public TimeoutLock forTimeoutLock(Supplier<String> supplier) {
+        return new TimeoutLock(supplier.get());
     }
 
 }

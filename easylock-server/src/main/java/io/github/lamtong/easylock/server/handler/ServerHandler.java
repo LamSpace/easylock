@@ -33,7 +33,7 @@ import java.util.logging.Logger;
  * message to {@link RequestResolver} to resolve the lock or unlock request via a thread pool.
  *
  * @author Lam Tong
- * @version 1.0.0
+ * @version 1.1.0
  * @see ChannelInboundHandlerAdapter
  * @see RequestResolver
  * @since 1.0.0

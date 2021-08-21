@@ -20,6 +20,7 @@ import io.github.lamtong.easylock.common.type.LockType;
 import io.github.lamtong.easylock.common.type.RequestType;
 
 import java.io.Serializable;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Basic definition for {@code Lock Request} and {@code Unlock Request}.
@@ -65,7 +66,7 @@ import java.io.Serializable;
  * </ol>
  *
  * @author Lam Tong
- * @version 1.0.0
+ * @version 1.1.0
  * @see LockType
  * @see RequestType
  * @since 1.0.0
@@ -86,6 +87,10 @@ public final class Request implements Serializable {
 
     private final boolean tryLock;
 
+    private final long time;
+
+    private final TimeUnit timeUnit;
+
     public Request(String key, String application, String thread,
                    LockType lockType, RequestType requestType) {
         this(key, application, thread, lockType, requestType, false);
@@ -94,12 +99,20 @@ public final class Request implements Serializable {
     public Request(String key, String application, String thread,
                    LockType lockType, RequestType requestType,
                    boolean tryLock) {
+        this(key, application, thread, lockType, requestType, tryLock, 0, null);
+    }
+
+    public Request(String key, String application, String thread,
+                   LockType lockType, RequestType requestType,
+                   boolean tryLock, long time, TimeUnit timeUnit) {
         this.key = key;
         this.application = application;
         this.thread = thread;
         this.lockType = lockType;
         this.requestType = requestType;
         this.tryLock = tryLock;
+        this.time = time;
+        this.timeUnit = timeUnit;
     }
 
     public String getKey() {
@@ -126,6 +139,14 @@ public final class Request implements Serializable {
         return tryLock;
     }
 
+    public long getTime() {
+        return time;
+    }
+
+    public TimeUnit getTimeUnit() {
+        return timeUnit;
+    }
+
     public int getIdentity() {
         return (this.key + this.thread + this.requestType.name()).hashCode();
     }
@@ -139,6 +160,8 @@ public final class Request implements Serializable {
                 ", lockType=" + lockType +
                 ", requestType=" + requestType +
                 ", tryLock=" + tryLock +
+                ", time=" + time +
+                ", timeUnit=" + timeUnit +
                 '}';
     }
 
