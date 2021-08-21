@@ -60,7 +60,7 @@ public final class BannerHandler {
                         "                             /'                                                \n" +
                         "                     /     /'                                                  \n" +
                         "                    (___,/'                                                   \n" +
-                        "\n          Copyright 2021 the original author, Lam Tong, Version 1.0.0.\n");
+                        "\n          Copyright 2021 the original author, Lam Tong, Version 1.1.0.\n");
     }
 
     private void displayBanner() {
