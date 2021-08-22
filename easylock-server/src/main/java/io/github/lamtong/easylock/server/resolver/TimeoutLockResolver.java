@@ -25,14 +25,20 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * {@link TimeoutLockResolver}
+ * {@link TimeoutLockResolver} extends {@link AbstractLockResolver} to resolve {@code Lock Request} and
+ * {@code Unlock Request} for {@code TimeoutLock}.
+ * <p>
+ * <b>Implementation Consideration.</b>
+ * <p>
+ * To handle requests for {@code TimeoutLock}, an extra thread is recommended to release locks which expired
+ * by an instance of type {@link DelayQueue}.
  *
  * @author Lam Tong
  * @version 1.1.0
  * @see AbstractLockResolver
  * @since 1.1.0
  */
-public class TimeoutLockResolver extends AbstractLockResolver {
+public final class TimeoutLockResolver extends AbstractLockResolver {
 
     private static final Logger logger = Logger.getLogger(TimeoutLockResolver.class.getName());
 
@@ -200,6 +206,14 @@ public class TimeoutLockResolver extends AbstractLockResolver {
                 "] releases TimeoutLock successfully.";
     }
 
+    /**
+     * Entity definition to record lock's information in {@link DelayQueue}.
+     *
+     * @author Lam Tong
+     * @version 1.1.0
+     * @see Delayed
+     * @since 1.1.0
+     */
     private static class DelayLock implements Delayed {
 
         private final long time;

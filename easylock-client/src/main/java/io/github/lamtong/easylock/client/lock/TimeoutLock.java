@@ -48,7 +48,6 @@ import java.util.logging.Logger;
  * <p>
  * {@link TimeoutLock} does not support for reentrant usage, indicating that this lock resource can only
  * be acquired once.
- * <p>
  *
  * @author Lam Tong
  * @version 1.1.0
@@ -56,7 +55,7 @@ import java.util.logging.Logger;
  * @since 1.1.0
  */
 @SuppressWarnings(value = {"Duplicates"})
-public class TimeoutLock extends Lock {
+public final class TimeoutLock extends Lock {
 
     private static final Logger logger = Logger.getLogger(TimeoutLock.class.getName());
 

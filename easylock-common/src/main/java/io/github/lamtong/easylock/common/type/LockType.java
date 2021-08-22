@@ -27,6 +27,8 @@ public enum LockType {
 
     SIMPLE_LOCK,
 
-    TIMEOUT_LOCK
+    TIMEOUT_LOCK,
+
+    REENTRANT_LOCK
 
 }
