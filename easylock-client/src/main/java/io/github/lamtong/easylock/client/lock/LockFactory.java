@@ -53,15 +53,30 @@ public final class LockFactory {
      * @return a lock instance.
      */
     public Lock forLock(LockType type, String key) {
-        // In the future, <code>if</code> block should be replaced with <code>switch</code>
-        if (type == LockType.SIMPLE_LOCK) {
-            return new SimpleLock(key);
+        switch (type) {
+            case TIMEOUT_LOCK:
+                return new TimeoutLock(key);
+            case REENTRANT_LOCK:
+                return new ReentrantLock(key);
+            default:
+                return new SimpleLock(key);
         }
-        return null;
     }
 
     /**
-     * Retrieves a lock instance by <code>Reflection</code>.
+     * Retrieves a lock instance by <code>Reflection</code>. In this way, type of generated instance
+     * is the same as that of parameter {@code Class<T> clazz}. For example, if an instance of type
+     * {@link SimpleLock} is demanded, then the following idiom should be used as:
+     * <pre>
+     *     {@code
+     *     ...
+     *     LockFactory factory = new Factory();
+     *     SimpleLock lock = factory.forLock(SimpleLock.class, "...");
+     *     ...
+     *     }
+     * </pre>
+     * In this way, the generated lock instance does not need to be converted into an explicit type
+     * compulsorily.
      *
      * @param clazz specified lock class object.
      * @param key   lock key.
@@ -93,7 +108,7 @@ public final class LockFactory {
     }
 
     /**
-     * Retrieves an instance of type {@link SimpleLock} using a functional interface {@link Supplier}.
+     * Retrieves an instance of type {@link SimpleLock} with a functional interface {@link Supplier}.
      *
      * @param supplier offers a key for an instance of {@link SimpleLock}.
      * @return an instance of type {@link SimpleLock}.
@@ -113,13 +128,33 @@ public final class LockFactory {
     }
 
     /**
-     * Retrieves an instance of type {@link TimeoutLock} using a functional interface {@link Supplier}.
+     * Retrieves an instance of type {@link TimeoutLock} with a functional interface {@link Supplier}.
      *
      * @param supplier provides a key for an instance of {@link TimeoutLock}.
      * @return an instance of type {@link TimeoutLock}.
      */
     public TimeoutLock forTimeoutLock(Supplier<String> supplier) {
         return new TimeoutLock(supplier.get());
+    }
+
+    /**
+     * Retrieves an instance of type {@link ReentrantLock}.
+     *
+     * @param key lock key.
+     * @return an instance of type {@link ReentrantLock}.
+     */
+    public ReentrantLock forReentrantLock(String key) {
+        return new ReentrantLock(key);
+    }
+
+    /**
+     * Retrieves an instance of type {@link ReentrantLock} with a functional interface {@link Supplier}.
+     *
+     * @param supplier interface to provide a lock key.
+     * @return an instance of type {@link ReentrantLock}.
+     */
+    public ReentrantLock forReentrantLock(Supplier<String> supplier) {
+        return new ReentrantLock(supplier.get());
     }
 
 }
