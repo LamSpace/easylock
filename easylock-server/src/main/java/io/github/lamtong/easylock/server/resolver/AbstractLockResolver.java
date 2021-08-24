@@ -18,7 +18,6 @@ package io.github.lamtong.easylock.server.resolver;
 
 import io.github.lamtong.easylock.common.core.Request;
 import io.github.lamtong.easylock.common.core.Response;
-import io.github.lamtong.easylock.common.type.RequestType;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -42,7 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * permission for locking.
  *
  * @author Lam Tong
- * @version 1.0.0
+ * @version 1.1.2
  * @see Resolver
  * @see LockResolver
  * @since 1.0.0
@@ -67,7 +66,7 @@ public abstract class AbstractLockResolver implements Resolver, LockResolver {
 
     @Override
     public final Response resolve(Request request) {
-        if (request.getRequestType() == RequestType.LOCK_REQUEST) {
+        if (request.getRequestType() == 1) {
             if (request.isTryLock()) {
                 return this.resolveTryLock(request);
             }

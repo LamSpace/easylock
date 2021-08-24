@@ -18,13 +18,12 @@ package io.github.lamtong.easylock.server.resolver;
 
 import io.github.lamtong.easylock.common.core.Request;
 import io.github.lamtong.easylock.common.core.Response;
-import io.github.lamtong.easylock.common.type.LockType;
 
 /**
  * Interface {@link Resolver} resolves requests. Typically, there are two essential steps
  * to resolve requests, namely
  * <ol>
- *     <li>Decides {@link LockType} of the requests.</li>
+ *     <li>Decides {@code LockType} of the requests.</li>
  *     <li>Processed the {@code LockRequest} or {@code UnlockRequest}.</li>
  * </ol>
  * Hence, implementations of {@link Resolver} should own these abilities to resolve requests.
@@ -34,7 +33,7 @@ import io.github.lamtong.easylock.common.type.LockType;
  * in {@link AbstractLockResolver#resolve(Request)}.
  *
  * @author Lam Tong
- * @version 1.0.0
+ * @version 1.1.2
  * @see RequestResolver
  * @see AbstractLockResolver
  * @since 1.0.0

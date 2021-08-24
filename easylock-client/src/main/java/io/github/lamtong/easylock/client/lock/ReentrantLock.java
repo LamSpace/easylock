@@ -21,8 +21,6 @@ import io.github.lamtong.easylock.client.property.ClientProperties;
 import io.github.lamtong.easylock.client.sender.RequestSender;
 import io.github.lamtong.easylock.common.core.Request;
 import io.github.lamtong.easylock.common.core.Response;
-import io.github.lamtong.easylock.common.type.LockType;
-import io.github.lamtong.easylock.common.type.RequestType;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -49,7 +47,7 @@ import java.util.logging.Logger;
  * at server.
  *
  * @author Lam Tong
- * @version 1.1.0
+ * @version 1.1.2
  * @see Lock
  * @since 1.1.0
  */
@@ -86,7 +84,7 @@ public final class ReentrantLock extends Lock {
             return false;
         }
         Request request = new Request(this.getKey(), properties.getApplication(),
-                Thread.currentThread().getName(), LockType.REENTRANT_LOCK, RequestType.LOCK_REQUEST,
+                Thread.currentThread().getName(), 4, 1,
                 tryLock);
         Response response = sender.send(request);
         if (response.isSuccess()) {
@@ -112,7 +110,7 @@ public final class ReentrantLock extends Lock {
             return false;
         }
         Request request = new Request(this.getKey(), properties.getApplication(),
-                Thread.currentThread().getName(), LockType.REENTRANT_LOCK, RequestType.UNLOCK_REQUEST);
+                Thread.currentThread().getName(), 4, 2);
         Response response = sender.send(request);
         if (response.isSuccess()) {
             // If unlock succeeds, decrement lock count and set canUnlock to false until lock

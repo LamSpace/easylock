@@ -16,9 +16,6 @@
 
 package io.github.lamtong.easylock.common.core;
 
-import io.github.lamtong.easylock.common.type.LockType;
-import io.github.lamtong.easylock.common.type.RequestType;
-
 import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 
@@ -57,7 +54,7 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * Work flow of {@link Request} resolved at server can be listed as below:
  * <ol>
- *     <li>Checks {@link LockType} of current {@link Request} instance;</li>
+ *     <li>Checks {@code LockType} of current {@link Request} instance;</li>
  *     <li>Checks whether current {@link Request} instance is a <code>Lock Request</code> or an <code>Unlock
  *     Request</code> via {@link Request#requestType}. If current {@link Request} is a <code>Lock Request</code>,
  *     then go to step 3; otherwise, resolves that <code>Unlock Request</code>;</li>
@@ -66,9 +63,7 @@ import java.util.concurrent.TimeUnit;
  * </ol>
  *
  * @author Lam Tong
- * @version 1.1.0
- * @see LockType
- * @see RequestType
+ * @version 1.1.2
  * @since 1.0.0
  */
 public final class Request implements Serializable {
@@ -81,9 +76,25 @@ public final class Request implements Serializable {
 
     private final String thread;
 
-    private final LockType lockType;
+    /**
+     * Lock type defines by integer. It is an appointment that
+     * <ul>
+     *     <li>'1' represents a simple lock;</li>
+     *     <li>'2' represents a timeout lock;</li>
+     *     <li>'4' represents a reentrant lock, and</li>
+     *     <li>'8' represents a read-write lock.</li>
+     * </ul>
+     */
+    private final int lockType;
 
-    private final RequestType requestType;
+    /**
+     * Request type defines by integer and appointment is
+     * <ul>
+     *     <li>'1' represents a lock request, and</li>
+     *     <li>'2' represents an unlock request.</li>
+     * </ul>
+     */
+    private final int requestType;
 
     private final boolean tryLock;
 
@@ -92,18 +103,18 @@ public final class Request implements Serializable {
     private final TimeUnit timeUnit;
 
     public Request(String key, String application, String thread,
-                   LockType lockType, RequestType requestType) {
+                   int lockType, int requestType) {
         this(key, application, thread, lockType, requestType, false);
     }
 
     public Request(String key, String application, String thread,
-                   LockType lockType, RequestType requestType,
+                   int lockType, int requestType,
                    boolean tryLock) {
         this(key, application, thread, lockType, requestType, tryLock, 0, null);
     }
 
     public Request(String key, String application, String thread,
-                   LockType lockType, RequestType requestType,
+                   int lockType, int requestType,
                    boolean tryLock, long time, TimeUnit timeUnit) {
         this.key = key;
         this.application = application;
@@ -127,11 +138,11 @@ public final class Request implements Serializable {
         return thread;
     }
 
-    public LockType getLockType() {
+    public int getLockType() {
         return lockType;
     }
 
-    public RequestType getRequestType() {
+    public int getRequestType() {
         return requestType;
     }
 
@@ -148,7 +159,28 @@ public final class Request implements Serializable {
     }
 
     public int getIdentity() {
-        return (this.key + this.thread + this.requestType.name()).hashCode();
+        return (this.key + this.thread + this.lockName() + this.requestName()).hashCode();
+    }
+
+    private String lockName() {
+        switch (this.lockType) {
+            case 1:
+                return "SimpleLock";
+            case 2:
+                return "TimeoutLock";
+            case 4:
+                return "ReentrantLock";
+            default:
+                return "ReadWriteLock";
+        }
+    }
+
+    private String requestName() {
+        if (this.requestType == 1) {
+            return "Lock";
+        } else {
+            return "Unlock";
+        }
     }
 
     @Override
@@ -157,8 +189,8 @@ public final class Request implements Serializable {
                 "key='" + key + '\'' +
                 ", application='" + application + '\'' +
                 ", thread='" + thread + '\'' +
-                ", lockType=" + lockType +
-                ", requestType=" + requestType +
+                ", lockType=" + lockName() +
+                ", requestType=" + requestName() +
                 ", tryLock=" + tryLock +
                 ", time=" + time +
                 ", timeUnit=" + timeUnit +

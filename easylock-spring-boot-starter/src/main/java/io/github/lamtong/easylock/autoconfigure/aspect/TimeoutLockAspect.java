@@ -35,7 +35,7 @@ import java.util.logging.Logger;
  * <code>Spring</code>.
  *
  * @author Lam Tong
- * @version 1.1.0
+ * @version 1.1.2
  * @see ByTimeoutLock
  * @since 1.1.0
  */
@@ -96,7 +96,7 @@ public class TimeoutLockAspect {
             }
         } finally {
             if (!lock.unlock() && logger.isLoggable(Level.INFO)) {
-                logger.log(Level.INFO, "Unlocking fails, maybe client disconnect from lock server.");
+                logger.log(Level.INFO, "Unlocking fails, maybe client disconnect from lock server or expiration.");
             }
         }
         return ans;

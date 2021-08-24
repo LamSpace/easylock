@@ -21,8 +21,6 @@ import io.github.lamtong.easylock.client.property.ClientProperties;
 import io.github.lamtong.easylock.client.sender.RequestSender;
 import io.github.lamtong.easylock.common.core.Request;
 import io.github.lamtong.easylock.common.core.Response;
-import io.github.lamtong.easylock.common.type.LockType;
-import io.github.lamtong.easylock.common.type.RequestType;
 
 import java.util.concurrent.DelayQueue;
 import java.util.concurrent.TimeUnit;
@@ -50,7 +48,7 @@ import java.util.logging.Logger;
  * be acquired once.
  *
  * @author Lam Tong
- * @version 1.1.0
+ * @version 1.1.2
  * @see Lock
  * @since 1.1.0
  */
@@ -111,7 +109,7 @@ public final class TimeoutLock extends Lock {
             return false;
         }
         Request request = new Request(this.getKey(), properties.getApplication(),
-                Thread.currentThread().getName(), LockType.TIMEOUT_LOCK, RequestType.LOCK_REQUEST,
+                Thread.currentThread().getName(), 2, 1,
                 tryLock, time, timeUnit);
         Response response = sender.send(request);
         if (response.isSuccess()) {
@@ -162,7 +160,7 @@ public final class TimeoutLock extends Lock {
             return false;
         }
         Request request = new Request(this.getKey(), properties.getApplication(),
-                Thread.currentThread().getName(), LockType.TIMEOUT_LOCK, RequestType.UNLOCK_REQUEST);
+                Thread.currentThread().getName(), 2, 2);
         Response response = sender.send(request);
         if (response.isSuccess()) {
             // Generally, unlock() always returns true.

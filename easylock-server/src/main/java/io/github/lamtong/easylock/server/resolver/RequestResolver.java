@@ -18,13 +18,12 @@ package io.github.lamtong.easylock.server.resolver;
 
 import io.github.lamtong.easylock.common.core.Request;
 import io.github.lamtong.easylock.common.core.Response;
-import io.github.lamtong.easylock.common.type.LockType;
 
 /**
  * {@link RequestResolver} resolves lock or unlock requests for kinds of locks. Generally,
  * {@link RequestResolver} contains instances of {@link AbstractLockResolver} to resolve
  * requests via {@link Request#lockType}. For example, {@link RequestResolver} contains a static
- * field of type {@link SimpleLockResolver} to resolve requests for {@link LockType#SIMPLE_LOCK}.
+ * field of type {@link SimpleLockResolver} to resolve requests for {@code SIMPLE_LOCK}.
  * <p>
  * Note that instance of {@link RequestResolver} is often used to resolve received requests.
  * <ol>
@@ -41,7 +40,7 @@ import io.github.lamtong.easylock.common.type.LockType;
  * should not override this method.
  *
  * @author Lam Tong
- * @version 1.0.0
+ * @version 1.1.2
  * @see Resolver
  * @see AbstractLockResolver
  * @since 1.0.0
@@ -52,12 +51,18 @@ public final class RequestResolver implements Resolver {
 
     private static final TimeoutLockResolver timeoutLock = TimeoutLockResolver.getResolver();
 
+    private static final ReentrantLockResolver reentrantLock = ReentrantLockResolver.getResolver();
+
     @Override
     public Response resolve(Request request) {
-        if (request.getLockType() == LockType.TIMEOUT_LOCK)
-            return timeoutLock.resolve(request);
-        else
-            return simpleLock.resolve(request);
+        switch (request.getLockType()) {
+            case 2:
+                return timeoutLock.resolve(request);
+            case 4:
+                return reentrantLock.resolve(request);
+            default:
+                return simpleLock.resolve(request);
+        }
     }
 
 }

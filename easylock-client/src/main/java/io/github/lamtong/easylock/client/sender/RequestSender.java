@@ -20,8 +20,6 @@ import io.github.lamtong.easylock.client.cache.ResponseCache;
 import io.github.lamtong.easylock.client.provider.ChannelPoolProvider;
 import io.github.lamtong.easylock.common.core.Request;
 import io.github.lamtong.easylock.common.core.Response;
-import io.github.lamtong.easylock.common.type.RequestType;
-import io.github.lamtong.easylock.common.type.ResponseType;
 import io.netty.channel.Channel;
 import io.netty.channel.pool.FixedChannelPool;
 import io.netty.util.concurrent.FutureListener;
@@ -33,7 +31,7 @@ import java.util.logging.Logger;
  * to server and try to acquire corresponding response in {@link ResponseCache}.
  *
  * @author Lam Tong
- * @version 1.0.0
+ * @version 1.1.2
  * @see Request
  * @see Response
  * @since 1.0.0
@@ -54,7 +52,7 @@ public final class RequestSender {
 
     public Response send(Request request) {
         final String key = request.getKey();
-        final RequestType requestType = request.getRequestType();
+        final int requestType = request.getRequestType();
         final int identity = request.getIdentity();
         final FixedChannelPool pool = ChannelPoolProvider.getPool();
         final ResponseCache cache = ResponseCache.getCache();
@@ -67,14 +65,14 @@ public final class RequestSender {
             } else {
                 // Fails to acquire a channel, maybe the client fails to connect to server, or network breakdown.
                 // Thus requests cancel and responses are created at client to answer the requests.
-                if (requestType == RequestType.LOCK_REQUEST) {
+                if (requestType == 1) {
                     cache.put(new Response(key, identity, false,
                             "Connection to server fails, lock request cancelled",
-                            ResponseType.LOCK_RESPONSE));
+                            1));
                 } else {
                     cache.put(new Response(key, identity, false,
                             "Connection to server fails, unlock request cancelled",
-                            ResponseType.LOCK_RESPONSE));
+                            2));
                 }
             }
         });
@@ -96,8 +94,8 @@ public final class RequestSender {
             Response res;
             //noinspection StatementWithEmptyBody
             while ((res = cache.peek(key)) == null ||
-                    (res.getResponseType() == ResponseType.LOCK_RESPONSE && requestType == RequestType.UNLOCK_REQUEST) ||
-                    (res.getResponseType() == ResponseType.UNLOCK_RESPONSE && requestType == RequestType.LOCK_REQUEST)) {
+                    (res.getResponseType() == 1 && requestType == 2) ||
+                    (res.getResponseType() == 2 && requestType == 1)) {
             }
             if (res.getIdentity() == identity) {
                 response = cache.take(key);

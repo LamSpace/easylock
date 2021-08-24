@@ -16,8 +16,6 @@
 
 package io.github.lamtong.easylock.client.lock;
 
-import io.github.lamtong.easylock.common.type.LockType;
-
 /**
  * {@link Lock} implementations provides more extensive lock or unlock operations in a distributed
  * application, where <b>synchronized</b> methods or other {@link java.util.concurrent.locks.Lock}
@@ -61,7 +59,7 @@ import io.github.lamtong.easylock.common.type.LockType;
  * recommended that to avoid confusion you never use <code>Lock</code> instances in this way strongly.
  * <p>
  * In a distributed application, it is <b>mandatory</b> to specify the lock name (or lock key {@link #key})
- * to distinguish distributed locks with the same lock lockType {@link LockType} for locking and unlocking.
+ * to distinguish distributed locks with the same lock lockType for locking and unlocking.
  * <p>
  * Implementations of {@link Lock} never throw an exception when locking or unlocking fails. But it is
  * still strongly recommended that locking and unlocking should be used in a <b>try-catch</b> or
@@ -77,7 +75,7 @@ import io.github.lamtong.easylock.common.type.LockType;
  * will fail.
  *
  * @author Lam Tong
- * @version 1.0.0
+ * @version 1.1.2
  * @see SimpleLock
  * @since 1.0.0
  */

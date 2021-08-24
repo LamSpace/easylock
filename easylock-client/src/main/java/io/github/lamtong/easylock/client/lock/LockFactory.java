@@ -16,8 +16,6 @@
 
 package io.github.lamtong.easylock.client.lock;
 
-import io.github.lamtong.easylock.common.type.LockType;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.function.Supplier;
@@ -27,7 +25,7 @@ import java.util.logging.Logger;
 /**
  * {@link LockFactory} tries to generate an instance of specified lock by
  * <ol>
- *     <li>{@link #forLock(LockType, String)} with specified {@link LockType}, or</li>
+ *     <li>{@link #forLock(int, String)} with specified {@code LockType}, or</li>
  *     <li>{@link #forLock(Class, String)} with specified lock class object.</li>
  * </ol>
  * <p>
@@ -35,7 +33,7 @@ import java.util.logging.Logger;
  * For example, {@link #forSimpleLock(String)} retrieves an instance of type {@link SimpleLock}.
  *
  * @author Lam Tong
- * @version 1.1.0
+ * @version 1.1.2
  * @see Lock
  * @see SimpleLock
  * @see TimeoutLock
@@ -46,17 +44,17 @@ public final class LockFactory {
     private static final Logger logger = Logger.getLogger(LockFactory.class.getName());
 
     /**
-     * Retrieves a lock instance by {@link LockType}.
+     * Retrieves a lock instance by {@code LockType}.
      *
      * @param type lock type.
      * @param key  lock key.
      * @return a lock instance.
      */
-    public Lock forLock(LockType type, String key) {
+    public Lock forLock(int type, String key) {
         switch (type) {
-            case TIMEOUT_LOCK:
+            case 2:
                 return new TimeoutLock(key);
-            case REENTRANT_LOCK:
+            case 4:
                 return new ReentrantLock(key);
             default:
                 return new SimpleLock(key);

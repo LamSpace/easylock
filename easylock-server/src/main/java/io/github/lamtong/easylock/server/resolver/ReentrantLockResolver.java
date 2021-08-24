@@ -18,7 +18,6 @@ package io.github.lamtong.easylock.server.resolver;
 
 import io.github.lamtong.easylock.common.core.Request;
 import io.github.lamtong.easylock.common.core.Response;
-import io.github.lamtong.easylock.common.type.ResponseType;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,7 +43,7 @@ import java.util.logging.Logger;
  * resource will be hold forever, and any other threads gain no chance to acquire the lock.
  *
  * @author Lam Tong
- * @version 1.1.0
+ * @version 1.1.2
  * @see AbstractLockResolver
  * @since 1.1.0
  */
@@ -77,7 +76,7 @@ public final class ReentrantLockResolver extends AbstractLockResolver {
                         logger.log(Level.INFO, acquireLock(lockRequest));
                     }
                     return new Response(key, lockRequest.getIdentity(), true, SUCCEED,
-                            ResponseType.LOCK_RESPONSE);
+                            1);
                 }
             }
         }
@@ -94,7 +93,7 @@ public final class ReentrantLockResolver extends AbstractLockResolver {
                         request.getThread() + "].");
             }
             return new Response(key, lockRequest.getIdentity(), false, LOCKED_ALREADY,
-                    ResponseType.LOCK_RESPONSE);
+                    1);
         }
         this.lockHolder.put(key, lockRequest);
         this.lockCounter.get(key).incrementAndGet();
@@ -102,7 +101,7 @@ public final class ReentrantLockResolver extends AbstractLockResolver {
             logger.log(Level.INFO, acquireLock(lockRequest));
         }
         return new Response(key, lockRequest.getIdentity(), true, SUCCEED,
-                ResponseType.LOCK_RESPONSE);
+                1);
     }
 
     @Override
@@ -119,7 +118,7 @@ public final class ReentrantLockResolver extends AbstractLockResolver {
                         logger.log(Level.INFO, acquireLock(lockRequest));
                     }
                     return new Response(key, lockRequest.getIdentity(), true, SUCCEED,
-                            ResponseType.LOCK_RESPONSE);
+                            1);
                 }
             }
         }
@@ -135,7 +134,7 @@ public final class ReentrantLockResolver extends AbstractLockResolver {
                 logger.log(Level.INFO, acquireLock(lockRequest));
             }
             return new Response(key, lockRequest.getIdentity(), true, SUCCEED,
-                    ResponseType.LOCK_RESPONSE);
+                    1);
         }
         this.requests.computeIfAbsent(key, k -> new LinkedBlockingQueue<>());
         this.permissions.computeIfAbsent(key, k -> new ArrayBlockingQueue<>(1));
@@ -155,7 +154,7 @@ public final class ReentrantLockResolver extends AbstractLockResolver {
             Thread.currentThread().interrupt();
         }
         return new Response(key, lockRequest.getIdentity(), true, SUCCEED,
-                ResponseType.LOCK_RESPONSE);
+                1);
     }
 
     @Override
@@ -187,7 +186,7 @@ public final class ReentrantLockResolver extends AbstractLockResolver {
             }
         }
         return new Response(key, unlockRequest.getIdentity(), true, SUCCEED,
-                ResponseType.UNLOCK_RESPONSE);
+                2);
     }
 
     @Override

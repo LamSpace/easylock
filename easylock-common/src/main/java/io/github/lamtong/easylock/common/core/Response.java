@@ -16,8 +16,6 @@
 
 package io.github.lamtong.easylock.common.core;
 
-import io.github.lamtong.easylock.common.type.ResponseType;
-
 import java.io.Serializable;
 
 /**
@@ -38,8 +36,7 @@ import java.io.Serializable;
  * from server to clients via network, implementation of {@link Serializable} counts.
  *
  * @author Lam Tong
- * @version 1.0.0
- * @see ResponseType
+ * @version 1.1.2
  * @since 1.0.0
  */
 public final class Response implements Serializable {
@@ -54,10 +51,17 @@ public final class Response implements Serializable {
 
     private final String cause;
 
-    private final ResponseType responseType;
+    /**
+     * Response type defines by integer with appointment that
+     * <ul>
+     *     <li>'1' represents a lock response, and</li>
+     *     <li>'2' represents an unlock response.</li>
+     * </ul>
+     */
+    private final int responseType;
 
     public Response(String key, int identity, boolean success,
-                    String cause, ResponseType responseType) {
+                    String cause, int responseType) {
         this.key = key;
         this.identity = identity;
         this.success = success;
@@ -81,8 +85,16 @@ public final class Response implements Serializable {
         return cause;
     }
 
-    public ResponseType getResponseType() {
+    public int getResponseType() {
         return responseType;
+    }
+
+    private String responseName() {
+        if (this.responseType == 1) {
+            return "LockResponse";
+        } else {
+            return "UnlockResponse";
+        }
     }
 
     @Override
@@ -92,8 +104,8 @@ public final class Response implements Serializable {
                 ", identity=" + identity +
                 ", success=" + success +
                 ", cause='" + cause + '\'' +
-                ", responseType=" + responseType +
-                '}';
+                ", responseType='" + responseName() +
+                "'}";
     }
 
 }
