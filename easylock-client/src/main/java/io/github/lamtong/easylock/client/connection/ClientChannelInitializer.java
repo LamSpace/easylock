@@ -14,10 +14,8 @@
  *  limitations under the License.
  */
 
-package io.github.lamtong.easylock.client.initializer;
+package io.github.lamtong.easylock.client.connection;
 
-import io.github.lamtong.easylock.client.handler.ClientChannelPoolHandler;
-import io.github.lamtong.easylock.client.receiver.ResponseReceiver;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
@@ -36,7 +34,7 @@ import io.netty.handler.codec.serialization.ObjectEncoder;
  * handle responses from server.
  *
  * @author Lam Tong
- * @version 1.0.0
+ * @version 1.2.0
  * @see ClientChannelPoolHandler
  * @see ResponseReceiver
  * @since 1.0.0

@@ -14,35 +14,29 @@
  *  limitations under the License.
  */
 
-package io.github.lamtong.easylock.client.constant;
+package io.github.lamtong.easylock.client.lock;
 
 import io.github.lamtong.easylock.common.core.Request;
 
 /**
- * Enumerations for {@link Request} errors.
+ * Constant definitions of {@link Request} errors.
  *
  * @author Lam Tong
- * @version 1.0.0
- * @since 1.0.0
+ * @version 1.2.0
+ * @see Request
+ * @since 1.2.0
  */
-public enum RequestError {
+class RequestError {
 
-    EMPTY_LOCK_KEY("Lock key should not be null or empty, reset lock key."),
+    static final String EMPTY_LOCK_KEY = "Lock key should not be null or empty, reset lock key.";
 
-    LOCKING_ALREADY("Locking succeeds already, lock cancels."),
+    static final String LOCKING_ALREADY = "Locking succeeds already, lock cancels.";
 
-    LOCKING_FAIL("Locking fails before, unlock cancels."),
+    static final String LOCKING_FAIL = "Locking fails before, unlock cancels.";
 
-    UNLOCKING_ALREADY("Unlocking succeeds already, unlock cancels.");
+    static final String UNLOCKING_ALREADY = "Unlocking succeeds already, unlock cancels.";
 
-    private final String message;
-
-    RequestError(String message) {
-        this.message = message;
-    }
-
-    public String getMessage() {
-        return this.message;
+    private RequestError() {
     }
 
 }

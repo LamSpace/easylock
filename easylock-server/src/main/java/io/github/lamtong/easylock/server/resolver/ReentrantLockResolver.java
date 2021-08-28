@@ -43,7 +43,7 @@ import java.util.logging.Logger;
  * resource will be hold forever, and any other threads gain no chance to acquire the lock.
  *
  * @author Lam Tong
- * @version 1.1.2
+ * @version 1.2.0
  * @see AbstractLockResolver
  * @since 1.1.0
  */
@@ -76,7 +76,7 @@ public final class ReentrantLockResolver extends AbstractLockResolver {
                         logger.log(Level.INFO, acquireLock(lockRequest));
                     }
                     return new Response(key, lockRequest.getIdentity(), true, SUCCEED,
-                            1);
+                            true);
                 }
             }
         }
@@ -93,7 +93,7 @@ public final class ReentrantLockResolver extends AbstractLockResolver {
                         request.getThread() + "].");
             }
             return new Response(key, lockRequest.getIdentity(), false, LOCKED_ALREADY,
-                    1);
+                    true);
         }
         this.lockHolder.put(key, lockRequest);
         this.lockCounter.get(key).incrementAndGet();
@@ -101,7 +101,7 @@ public final class ReentrantLockResolver extends AbstractLockResolver {
             logger.log(Level.INFO, acquireLock(lockRequest));
         }
         return new Response(key, lockRequest.getIdentity(), true, SUCCEED,
-                1);
+                true);
     }
 
     @Override
@@ -118,7 +118,7 @@ public final class ReentrantLockResolver extends AbstractLockResolver {
                         logger.log(Level.INFO, acquireLock(lockRequest));
                     }
                     return new Response(key, lockRequest.getIdentity(), true, SUCCEED,
-                            1);
+                            true);
                 }
             }
         }
@@ -134,7 +134,7 @@ public final class ReentrantLockResolver extends AbstractLockResolver {
                 logger.log(Level.INFO, acquireLock(lockRequest));
             }
             return new Response(key, lockRequest.getIdentity(), true, SUCCEED,
-                    1);
+                    true);
         }
         this.requests.computeIfAbsent(key, k -> new LinkedBlockingQueue<>());
         this.permissions.computeIfAbsent(key, k -> new ArrayBlockingQueue<>(1));
@@ -154,7 +154,7 @@ public final class ReentrantLockResolver extends AbstractLockResolver {
             Thread.currentThread().interrupt();
         }
         return new Response(key, lockRequest.getIdentity(), true, SUCCEED,
-                1);
+                true);
     }
 
     @Override
@@ -186,7 +186,7 @@ public final class ReentrantLockResolver extends AbstractLockResolver {
             }
         }
         return new Response(key, unlockRequest.getIdentity(), true, SUCCEED,
-                2);
+                false);
     }
 
     @Override

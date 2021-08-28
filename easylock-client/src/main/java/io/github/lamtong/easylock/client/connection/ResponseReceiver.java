@@ -14,9 +14,8 @@
  *  limitations under the License.
  */
 
-package io.github.lamtong.easylock.client.receiver;
+package io.github.lamtong.easylock.client.connection;
 
-import io.github.lamtong.easylock.client.cache.ResponseCache;
 import io.github.lamtong.easylock.common.core.Response;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -29,7 +28,7 @@ import java.util.logging.Logger;
  * receive and handle responses from server for each channel.
  *
  * @author Lam Tong
- * @version 1.1.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 public final class ResponseReceiver extends ChannelInboundHandlerAdapter {

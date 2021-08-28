@@ -14,9 +14,8 @@
  *  limitations under the License.
  */
 
-package io.github.lamtong.easylock.client.cache;
+package io.github.lamtong.easylock.client.connection;
 
-import io.github.lamtong.easylock.client.property.ClientProperties;
 import io.github.lamtong.easylock.common.core.Request;
 import io.github.lamtong.easylock.common.core.Response;
 
@@ -40,7 +39,7 @@ import java.util.logging.Logger;
  * arrives, then {@link Response#identity} will be verified for each thread.
  *
  * @author Lam Tong
- * @version 1.0.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 public final class ResponseCache {

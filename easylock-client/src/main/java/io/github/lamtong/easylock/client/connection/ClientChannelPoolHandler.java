@@ -14,11 +14,8 @@
  *  limitations under the License.
  */
 
-package io.github.lamtong.easylock.client.handler;
+package io.github.lamtong.easylock.client.connection;
 
-import io.github.lamtong.easylock.client.initializer.ClientChannelInitializer;
-import io.github.lamtong.easylock.client.provider.ChannelPoolProvider;
-import io.github.lamtong.easylock.client.receiver.ResponseReceiver;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.pool.ChannelPoolHandler;
@@ -34,7 +31,7 @@ import java.util.logging.Logger;
  * is required to initialize the channel.
  *
  * @author Lam Tong
- * @version 1.1.0
+ * @version 1.2.0
  * @see ChannelPoolProvider
  * @see ClientChannelInitializer
  * @since 1.0.0

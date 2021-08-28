@@ -54,16 +54,17 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * Work flow of {@link Request} resolved at server can be listed as below:
  * <ol>
- *     <li>Checks {@code LockType} of current {@link Request} instance;</li>
+ *     <li>Checks {@code Lock Type} of current {@link Request} instance;</li>
  *     <li>Checks whether current {@link Request} instance is a <code>Lock Request</code> or an <code>Unlock
- *     Request</code> via {@link Request#requestType}. If current {@link Request} is a <code>Lock Request</code>,
+ *     Request</code> via {@link Request#lockRequest}. If current {@link Request} is a <code>Lock Request</code>,
  *     then go to step 3; otherwise, resolves that <code>Unlock Request</code>;</li>
  *     <li>Checks that current instance is a <code>try-lock</code> {@link Request} or not via {@link #tryLock}
  *     and resolves that <code>Lock Request</code>.</li>
  * </ol>
  *
  * @author Lam Tong
- * @version 1.1.2
+ * @version 1.2.0
+ * @see Serializable
  * @since 1.0.0
  */
 public final class Request implements Serializable {
@@ -85,16 +86,9 @@ public final class Request implements Serializable {
      *     <li>'8' represents a read-write lock.</li>
      * </ul>
      */
-    private final int lockType;
+    private final int type;
 
-    /**
-     * Request type defines by integer and appointment is
-     * <ul>
-     *     <li>'1' represents a lock request, and</li>
-     *     <li>'2' represents an unlock request.</li>
-     * </ul>
-     */
-    private final int requestType;
+    private final boolean lockRequest;
 
     private final boolean tryLock;
 
@@ -102,28 +96,106 @@ public final class Request implements Serializable {
 
     private final TimeUnit timeUnit;
 
+    private final boolean readLock;
+
+    /**
+     * Constructor for {@code Simple Lock} and {@code Reentrant Lock}, whether a lock request
+     * which only support lock operation or an unlock request.
+     *
+     * @param key
+     * @param application
+     * @param thread
+     * @param type
+     * @param lockRequest
+     */
+    @SuppressWarnings(value = {"JavaDoc"})
     public Request(String key, String application, String thread,
-                   int lockType, int requestType) {
-        this(key, application, thread, lockType, requestType, false);
+                   int type, boolean lockRequest) {
+        this(key, application, thread, type, lockRequest, false);
     }
 
+    /**
+     * Constructor for {@code Simple Lock} and {@code Reentrant Lock}, whether a lock request
+     * or an unlock request.
+     *
+     * @param key
+     * @param application
+     * @param thread
+     * @param type
+     * @param lockRequest
+     * @param tryLock
+     */
+    @SuppressWarnings(value = {"JavaDoc"})
     public Request(String key, String application, String thread,
-                   int lockType, int requestType,
-                   boolean tryLock) {
-        this(key, application, thread, lockType, requestType, tryLock, 0, null);
+                   int type, boolean lockRequest, boolean tryLock) {
+        this(key, application, thread, type, lockRequest, tryLock, false);
     }
 
+    /**
+     * Typical constructor for {@code Timeout Lock}, whether a lock request or an unlock request.
+     *
+     * @param key
+     * @param application
+     * @param thread
+     * @param type
+     * @param lockRequest
+     * @param tryLock
+     * @param time
+     * @param timeUnit
+     */
+    @SuppressWarnings(value = {"JavaDoc"})
     public Request(String key, String application, String thread,
-                   int lockType, int requestType,
-                   boolean tryLock, long time, TimeUnit timeUnit) {
+                   int type, boolean lockRequest, boolean tryLock,
+                   long time, TimeUnit timeUnit) {
+        this(key, application, thread, type, lockRequest, tryLock, time, timeUnit, false);
+    }
+
+    /**
+     * Typical constructor for {@code Read-Write Lock}, whether a lock request or an unlock
+     * request.
+     *
+     * @param key
+     * @param application
+     * @param thread
+     * @param type
+     * @param lockRequest
+     * @param tryLock
+     * @param readLock
+     */
+    @SuppressWarnings(value = {"JavaDoc"})
+    public Request(String key, String application, String thread,
+                   int type, boolean lockRequest, boolean tryLock,
+                   boolean readLock) {
+        this(key, application, thread, type, lockRequest, tryLock, 0, null, readLock);
+    }
+
+    /**
+     * Constructor for four kinds of locks, which are {@code Simple Lock}, {@code Timeout Lock},
+     * {@code Reentrant Lock} and {@code Read-Write Lock} with all parameters, whether a lock
+     * request or an unlock request.
+     *
+     * @param key         lock key
+     * @param application application name
+     * @param thread      thread name
+     * @param type        lock type, defined by an integer
+     * @param lockRequest if current request is a lock request
+     * @param tryLock     if current lock request acquires a lock resource with <code>try-lock</code>.
+     * @param time        time to expire
+     * @param timeUnit    time unit for expiration
+     * @param readLock    if current request is a read lock or not
+     */
+    public Request(String key, String application, String thread,
+                   int type, boolean lockRequest, boolean tryLock,
+                   long time, TimeUnit timeUnit, boolean readLock) {
         this.key = key;
         this.application = application;
         this.thread = thread;
-        this.lockType = lockType;
-        this.requestType = requestType;
+        this.type = type;
+        this.lockRequest = lockRequest;
         this.tryLock = tryLock;
         this.time = time;
         this.timeUnit = timeUnit;
+        this.readLock = readLock;
     }
 
     public String getKey() {
@@ -138,12 +210,12 @@ public final class Request implements Serializable {
         return thread;
     }
 
-    public int getLockType() {
-        return lockType;
+    public int getType() {
+        return type;
     }
 
-    public int getRequestType() {
-        return requestType;
+    public boolean isLockRequest() {
+        return lockRequest;
     }
 
     public boolean isTryLock() {
@@ -158,12 +230,17 @@ public final class Request implements Serializable {
         return timeUnit;
     }
 
+    public boolean isReadLock() {
+        return readLock;
+    }
+
     public int getIdentity() {
+        // TODO: 2021/8/28 仔细确认 identity 与哪些元素相关.
         return (this.key + this.thread + this.lockName() + this.requestName()).hashCode();
     }
 
     private String lockName() {
-        switch (this.lockType) {
+        switch (this.type) {
             case 1:
                 return "SimpleLock";
             case 2:
@@ -176,11 +253,7 @@ public final class Request implements Serializable {
     }
 
     private String requestName() {
-        if (this.requestType == 1) {
-            return "Lock";
-        } else {
-            return "Unlock";
-        }
+        return this.lockRequest ? "Lock" : "Unlock";
     }
 
     @Override
@@ -189,11 +262,12 @@ public final class Request implements Serializable {
                 "key='" + key + '\'' +
                 ", application='" + application + '\'' +
                 ", thread='" + thread + '\'' +
-                ", lockType=" + lockName() +
-                ", requestType=" + requestName() +
+                ", type=" + this.lockName() +
+                ", lock=" + lockRequest +
                 ", tryLock=" + tryLock +
                 ", time=" + time +
                 ", timeUnit=" + timeUnit +
+                ", readLock=" + readLock +
                 '}';
     }
 

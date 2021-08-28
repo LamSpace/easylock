@@ -16,9 +16,8 @@
 
 package io.github.lamtong.easylock.client.lock;
 
-import io.github.lamtong.easylock.client.constant.RequestError;
-import io.github.lamtong.easylock.client.property.ClientProperties;
-import io.github.lamtong.easylock.client.sender.RequestSender;
+import io.github.lamtong.easylock.client.connection.ClientProperties;
+import io.github.lamtong.easylock.client.connection.RequestSender;
 import io.github.lamtong.easylock.common.core.Request;
 import io.github.lamtong.easylock.common.core.Response;
 
@@ -50,7 +49,7 @@ import java.util.logging.Logger;
  * other threads gains no chances to acquire the lock unless the lock is released at server manually.
  *
  * @author Lam Tong
- * @version 1.1.2
+ * @version 1.2.0
  * @see Lock
  * @since 1.0.0
  */
@@ -81,19 +80,19 @@ public final class SimpleLock extends Lock {
         if (!this.validateKey()) {
             // If lock key is not available, then returns false immediately.
             if (logger.isLoggable(Level.INFO)) {
-                logger.log(Level.INFO, RequestError.EMPTY_LOCK_KEY.getMessage());
+                logger.log(Level.INFO, RequestError.EMPTY_LOCK_KEY);
             }
             return false;
         }
         if (!this.canLock()) {
             // If this lock instance has been locked successfully before, then returns false immediately.
             if (logger.isLoggable(Level.INFO)) {
-                logger.log(Level.INFO, RequestError.LOCKING_ALREADY.getMessage());
+                logger.log(Level.INFO, RequestError.LOCKING_ALREADY);
             }
             return false;
         }
         Request request = new Request(this.getKey(), properties.getApplication(),
-                Thread.currentThread().getName(), 1, 1, tryLock);
+                Thread.currentThread().getName(), 1, true, tryLock);
         Response response = sender.send(request);
         if (response.isSuccess()) {
 //             There are two cases that this code will be executed.
@@ -111,19 +110,19 @@ public final class SimpleLock extends Lock {
         if (!this.success()) {
             // If this lock instance has not been locked successfully before, then returns immediately.
             if (logger.isLoggable(Level.INFO)) {
-                logger.log(Level.INFO, RequestError.LOCKING_FAIL.getMessage());
+                logger.log(Level.INFO, RequestError.LOCKING_FAIL);
             }
             return false;
         }
         if (!this.canUnlock()) {
             // If this lock instance has been unlocked, then returns immediately.
             if (logger.isLoggable(Level.INFO)) {
-                logger.log(Level.INFO, RequestError.UNLOCKING_ALREADY.getMessage());
+                logger.log(Level.INFO, RequestError.UNLOCKING_ALREADY);
             }
             return false;
         }
         Request request = new Request(this.getKey(), properties.getApplication(),
-                Thread.currentThread().getName(), 1, 2);
+                Thread.currentThread().getName(), 1, false);
         Response response = sender.send(request);
         if (response.isSuccess()) {
             // Generally, unlock() always returns true.

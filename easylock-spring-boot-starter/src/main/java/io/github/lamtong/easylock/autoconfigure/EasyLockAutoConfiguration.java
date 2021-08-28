@@ -18,9 +18,9 @@ package io.github.lamtong.easylock.autoconfigure;
 
 import io.github.lamtong.easylock.autoconfigure.aspect.SimpleLockAspect;
 import io.github.lamtong.easylock.autoconfigure.aspect.TimeoutLockAspect;
+import io.github.lamtong.easylock.client.connection.ClientProperties;
 import io.github.lamtong.easylock.client.lock.LockFactory;
 import io.github.lamtong.easylock.client.lock.SimpleLock;
-import io.github.lamtong.easylock.client.property.ClientProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -49,7 +49,7 @@ import java.util.logging.Logger;
  * {@link Import} is used to activate annotations like {@link SimpleLockAspect}.
  *
  * @author Lam Tong
- * @version 1.1.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 @Configuration

@@ -14,10 +14,8 @@
  *  limitations under the License.
  */
 
-package io.github.lamtong.easylock.client.provider;
+package io.github.lamtong.easylock.client.connection;
 
-import io.github.lamtong.easylock.client.handler.ClientChannelPoolHandler;
-import io.github.lamtong.easylock.client.property.ClientProperties;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
@@ -63,7 +61,7 @@ import java.net.InetSocketAddress;
  * </pre>
  *
  * @author Lam Tong
- * @version 1.0.0
+ * @version 1.2.0
  * @see ClientChannelPoolHandler
  * @see FixedChannelPool
  * @since 1.0.0
@@ -90,7 +88,7 @@ public final class ChannelPoolProvider {
 
     private ChannelPoolProvider() {
     }
-    
+
     public static FixedChannelPool getPool() {
         return pool;
     }

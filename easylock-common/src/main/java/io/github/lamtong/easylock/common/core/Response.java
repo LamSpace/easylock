@@ -36,7 +36,7 @@ import java.io.Serializable;
  * from server to clients via network, implementation of {@link Serializable} counts.
  *
  * @author Lam Tong
- * @version 1.1.2
+ * @version 1.2.0
  * @since 1.0.0
  */
 public final class Response implements Serializable {
@@ -51,22 +51,15 @@ public final class Response implements Serializable {
 
     private final String cause;
 
-    /**
-     * Response type defines by integer with appointment that
-     * <ul>
-     *     <li>'1' represents a lock response, and</li>
-     *     <li>'2' represents an unlock response.</li>
-     * </ul>
-     */
-    private final int responseType;
+    private final boolean lockResponse;
 
     public Response(String key, int identity, boolean success,
-                    String cause, int responseType) {
+                    String cause, boolean lockResponse) {
         this.key = key;
         this.identity = identity;
         this.success = success;
         this.cause = cause;
-        this.responseType = responseType;
+        this.lockResponse = lockResponse;
     }
 
     public String getKey() {
@@ -85,16 +78,8 @@ public final class Response implements Serializable {
         return cause;
     }
 
-    public int getResponseType() {
-        return responseType;
-    }
-
-    private String responseName() {
-        if (this.responseType == 1) {
-            return "LockResponse";
-        } else {
-            return "UnlockResponse";
-        }
+    public boolean isLockResponse() {
+        return lockResponse;
     }
 
     @Override
@@ -104,8 +89,8 @@ public final class Response implements Serializable {
                 ", identity=" + identity +
                 ", success=" + success +
                 ", cause='" + cause + '\'' +
-                ", responseType='" + responseName() +
-                "'}";
+                ", lockResponse=" + lockResponse +
+                '}';
     }
 
 }

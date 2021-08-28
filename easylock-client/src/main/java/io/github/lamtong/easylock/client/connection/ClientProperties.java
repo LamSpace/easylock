@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package io.github.lamtong.easylock.client.property;
+package io.github.lamtong.easylock.client.connection;
 
 /**
  * Client properties. Some of them may be used for connections to server, and others are
@@ -22,7 +22,7 @@ package io.github.lamtong.easylock.client.property;
  * for {@link ClientProperties}.
  *
  * @author Lam Tong
- * @version 1.0.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 public final class ClientProperties {

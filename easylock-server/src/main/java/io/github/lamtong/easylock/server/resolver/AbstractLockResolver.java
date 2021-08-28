@@ -41,7 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * permission for locking.
  *
  * @author Lam Tong
- * @version 1.1.2
+ * @version 1.2.0
  * @see Resolver
  * @see LockResolver
  * @since 1.0.0
@@ -66,7 +66,7 @@ public abstract class AbstractLockResolver implements Resolver, LockResolver {
 
     @Override
     public final Response resolve(Request request) {
-        if (request.getRequestType() == 1) {
+        if (request.isLockRequest()) {
             if (request.isTryLock()) {
                 return this.resolveTryLock(request);
             }

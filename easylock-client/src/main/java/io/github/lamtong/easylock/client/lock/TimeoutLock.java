@@ -16,9 +16,8 @@
 
 package io.github.lamtong.easylock.client.lock;
 
-import io.github.lamtong.easylock.client.constant.RequestError;
-import io.github.lamtong.easylock.client.property.ClientProperties;
-import io.github.lamtong.easylock.client.sender.RequestSender;
+import io.github.lamtong.easylock.client.connection.ClientProperties;
+import io.github.lamtong.easylock.client.connection.RequestSender;
 import io.github.lamtong.easylock.common.core.Request;
 import io.github.lamtong.easylock.common.core.Response;
 
@@ -48,7 +47,7 @@ import java.util.logging.Logger;
  * be acquired once.
  *
  * @author Lam Tong
- * @version 1.1.2
+ * @version 1.2.0
  * @see Lock
  * @since 1.1.0
  */
@@ -93,23 +92,23 @@ public final class TimeoutLock extends Lock {
         return doLock(false, time, timeUnit);
     }
 
-    public boolean doLock(boolean tryLock, long time, TimeUnit timeUnit) {
+    private boolean doLock(boolean tryLock, long time, TimeUnit timeUnit) {
         if (!this.validateKey()) {
             // If lock key is not available, then returns false immediately.
             if (logger.isLoggable(Level.INFO)) {
-                logger.log(Level.INFO, RequestError.EMPTY_LOCK_KEY.getMessage());
+                logger.log(Level.INFO, RequestError.EMPTY_LOCK_KEY);
             }
             return false;
         }
         if (!this.canLock()) {
             // If this lock instance has been locked successfully before, then returns false immediately.
             if (logger.isLoggable(Level.INFO)) {
-                logger.log(Level.INFO, RequestError.LOCKING_ALREADY.getMessage());
+                logger.log(Level.INFO, RequestError.LOCKING_ALREADY);
             }
             return false;
         }
         Request request = new Request(this.getKey(), properties.getApplication(),
-                Thread.currentThread().getName(), 2, 1,
+                Thread.currentThread().getName(), 2, true,
                 tryLock, time, timeUnit);
         Response response = sender.send(request);
         if (response.isSuccess()) {
@@ -124,23 +123,24 @@ public final class TimeoutLock extends Lock {
     }
 
     /**
-     * Overloaded by {@link #tryLock(long, TimeUnit)} to provide an extra functionality of expiration.
+     * Tries to acquire the lock and returns true if and only if the lock resource is available
+     * with default expiration.
      *
-     * @return false cause this method will not be invoked by clients.
+     * @return true if and only if the lock resource if available; otherwise, returns false.
      */
     @Override
-    protected boolean tryLock() {
-        return false;
+    public boolean tryLock() {
+        return tryLock(1, TimeUnit.SECONDS);
     }
 
     /**
-     * Overloaded by {@link #lock(long, TimeUnit)} to provide an extra functionality of expiration.
+     * Acquires the lock resource with default expiration and never fails.
      *
-     * @return false cause this method will not be invoked by clients.
+     * @return true always.
      */
     @Override
-    protected boolean lock() {
-        return false;
+    public boolean lock() {
+        return lock(1, TimeUnit.SECONDS);
     }
 
     @Override
@@ -148,19 +148,19 @@ public final class TimeoutLock extends Lock {
         if (!this.success()) {
             // If this lock instance has not been locked successfully before, then returns immediately.
             if (logger.isLoggable(Level.INFO)) {
-                logger.log(Level.INFO, RequestError.LOCKING_FAIL.getMessage());
+                logger.log(Level.INFO, RequestError.LOCKING_FAIL);
             }
             return false;
         }
         if (!this.canUnlock()) {
             // If this lock instance has been unlocked, then returns immediately.
             if (logger.isLoggable(Level.INFO)) {
-                logger.log(Level.INFO, RequestError.UNLOCKING_ALREADY.getMessage());
+                logger.log(Level.INFO, RequestError.UNLOCKING_ALREADY);
             }
             return false;
         }
         Request request = new Request(this.getKey(), properties.getApplication(),
-                Thread.currentThread().getName(), 2, 2);
+                Thread.currentThread().getName(), 2, false);
         Response response = sender.send(request);
         if (response.isSuccess()) {
             // Generally, unlock() always returns true.

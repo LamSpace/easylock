@@ -30,7 +30,7 @@ import java.util.logging.Logger;
  * {@link AbstractLockResolver#resolve(Request)} has already define a template to resolve requests.
  *
  * @author Lam Tong
- * @version 1.1.2
+ * @version 1.2.0
  * @see AbstractLockResolver
  * @since 1.0.0
  */
@@ -59,12 +59,12 @@ public final class SimpleLockResolver extends AbstractLockResolver {
                         logger.log(Level.INFO, acquireLock(lockRequest));
                     }
                     return new Response(key, lockRequest.getIdentity(), true, SUCCEED,
-                            1);
+                            true);
                 }
             }
         }
         return new Response(key, lockRequest.getIdentity(), false, LOCKED_ALREADY,
-                1);
+                true);
     }
 
     @Override
@@ -79,7 +79,7 @@ public final class SimpleLockResolver extends AbstractLockResolver {
                         logger.log(Level.INFO, acquireLock(lockRequest));
                     }
                     return new Response(key, lockRequest.getIdentity(),
-                            true, SUCCEED, 1);
+                            true, SUCCEED, true);
                 }
             }
         }
@@ -99,7 +99,7 @@ public final class SimpleLockResolver extends AbstractLockResolver {
             logger.log(Level.INFO, acquireLock(lockRequest));
         }
         return new Response(key, lockRequest.getIdentity(),
-                true, SUCCEED, 1);
+                true, SUCCEED, true);
     }
 
     @Override
@@ -122,7 +122,7 @@ public final class SimpleLockResolver extends AbstractLockResolver {
             Thread.currentThread().interrupt();
         }
         return new Response(key, unlockRequest.getIdentity(),
-                true, SUCCEED, 2);
+                true, SUCCEED, false);
     }
 
     @Override

@@ -22,7 +22,7 @@ import io.github.lamtong.easylock.common.core.Response;
 /**
  * {@link RequestResolver} resolves lock or unlock requests for kinds of locks. Generally,
  * {@link RequestResolver} contains instances of {@link AbstractLockResolver} to resolve
- * requests via {@link Request#lockType}. For example, {@link RequestResolver} contains a static
+ * requests via {@link Request#type}. For example, {@link RequestResolver} contains a static
  * field of type {@link SimpleLockResolver} to resolve requests for {@code SIMPLE_LOCK}.
  * <p>
  * Note that instance of {@link RequestResolver} is often used to resolve received requests.
@@ -40,7 +40,7 @@ import io.github.lamtong.easylock.common.core.Response;
  * should not override this method.
  *
  * @author Lam Tong
- * @version 1.1.2
+ * @version 1.2.0
  * @see Resolver
  * @see AbstractLockResolver
  * @since 1.0.0
@@ -55,7 +55,7 @@ public final class RequestResolver implements Resolver {
 
     @Override
     public Response resolve(Request request) {
-        switch (request.getLockType()) {
+        switch (request.getType()) {
             case 2:
                 return timeoutLock.resolve(request);
             case 4:

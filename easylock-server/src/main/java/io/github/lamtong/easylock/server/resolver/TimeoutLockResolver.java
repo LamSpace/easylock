@@ -33,7 +33,7 @@ import java.util.logging.Logger;
  * by an instance of type {@link DelayQueue}.
  *
  * @author Lam Tong
- * @version 1.1.2
+ * @version 1.2.0
  * @see AbstractLockResolver
  * @since 1.1.0
  */
@@ -97,12 +97,12 @@ public final class TimeoutLockResolver extends AbstractLockResolver {
                         logger.log(Level.INFO, acquireLock(lockRequest));
                     }
                     return new Response(key, lockRequest.getIdentity(),
-                            true, SUCCEED, 1);
+                            true, SUCCEED, true);
                 }
             }
         }
         return new Response(key, lockRequest.getIdentity(), false, LOCKED_ALREADY,
-                1);
+                true);
     }
 
     @Override
@@ -119,7 +119,7 @@ public final class TimeoutLockResolver extends AbstractLockResolver {
                         logger.log(Level.INFO, acquireLock(lockRequest));
                     }
                     return new Response(key, lockRequest.getIdentity(),
-                            true, SUCCEED, 1);
+                            true, SUCCEED, true);
                 }
             }
         }
@@ -141,7 +141,7 @@ public final class TimeoutLockResolver extends AbstractLockResolver {
             logger.log(Level.INFO, acquireLock(lockRequest));
         }
         return new Response(key, lockRequest.getIdentity(), true, SUCCEED,
-                1);
+                true);
     }
 
     @Override
@@ -170,7 +170,7 @@ public final class TimeoutLockResolver extends AbstractLockResolver {
                     Thread.currentThread().interrupt();
                 }
                 return new Response(key, unlockRequest.getIdentity(), true, SUCCEED,
-                        2);
+                        false);
             } else {
                 // Lock expired and now is hold be another thread.
                 if (logger.isLoggable(Level.INFO)) {
@@ -180,7 +180,7 @@ public final class TimeoutLockResolver extends AbstractLockResolver {
                             request.getApplication(), request.getThread()));
                 }
                 return new Response(key, unlockRequest.getIdentity(), false, LOCK_EXPIRED,
-                        2);
+                        false);
             }
         } else {
             // Lock is not hold at server, namely expired.
@@ -189,7 +189,7 @@ public final class TimeoutLockResolver extends AbstractLockResolver {
                         "due to expiration.", unlockRequest.getApplication(), unlockRequest.getThread()));
             }
             return new Response(key, unlockRequest.getIdentity(), false, LOCK_EXPIRED,
-                    2);
+                    false);
         }
     }
 

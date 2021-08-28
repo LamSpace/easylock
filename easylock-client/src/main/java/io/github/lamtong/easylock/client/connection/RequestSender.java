@@ -14,10 +14,8 @@
  *  limitations under the License.
  */
 
-package io.github.lamtong.easylock.client.sender;
+package io.github.lamtong.easylock.client.connection;
 
-import io.github.lamtong.easylock.client.cache.ResponseCache;
-import io.github.lamtong.easylock.client.provider.ChannelPoolProvider;
 import io.github.lamtong.easylock.common.core.Request;
 import io.github.lamtong.easylock.common.core.Response;
 import io.netty.channel.Channel;
@@ -31,7 +29,7 @@ import java.util.logging.Logger;
  * to server and try to acquire corresponding response in {@link ResponseCache}.
  *
  * @author Lam Tong
- * @version 1.1.2
+ * @version 1.2.0
  * @see Request
  * @see Response
  * @since 1.0.0
@@ -50,9 +48,15 @@ public final class RequestSender {
         return sender;
     }
 
+    /**
+     * Sends a {@link Request} instance to server and retrieves corresponding responding response.
+     *
+     * @param request {@link Request} instance resolved at server.
+     * @return corresponding response.
+     */
     public Response send(Request request) {
         final String key = request.getKey();
-        final int requestType = request.getRequestType();
+        final boolean lockRequest = request.isLockRequest();
         final int identity = request.getIdentity();
         final FixedChannelPool pool = ChannelPoolProvider.getPool();
         final ResponseCache cache = ResponseCache.getCache();
@@ -65,14 +69,14 @@ public final class RequestSender {
             } else {
                 // Fails to acquire a channel, maybe the client fails to connect to server, or network breakdown.
                 // Thus requests cancel and responses are created at client to answer the requests.
-                if (requestType == 1) {
+                if (lockRequest) {
                     cache.put(new Response(key, identity, false,
                             "Connection to server fails, lock request cancelled",
-                            1));
+                            true));
                 } else {
                     cache.put(new Response(key, identity, false,
                             "Connection to server fails, unlock request cancelled",
-                            2));
+                            false));
                 }
             }
         });
@@ -94,8 +98,9 @@ public final class RequestSender {
             Response res;
             //noinspection StatementWithEmptyBody
             while ((res = cache.peek(key)) == null ||
-                    (res.getResponseType() == 1 && requestType == 2) ||
-                    (res.getResponseType() == 2 && requestType == 1)) {
+                    (res.isLockResponse() && !lockRequest) ||
+                    (!res.isLockResponse() && lockRequest)) {
+                // Waiting until corresponding response arrives.
             }
             if (res.getIdentity() == identity) {
                 response = cache.take(key);
