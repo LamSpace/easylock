@@ -33,7 +33,7 @@ import java.util.logging.Logger;
  * For example, {@link #forSimpleLock(String)} retrieves an instance of type {@link SimpleLock}.
  *
  * @author Lam Tong
- * @version 1.1.2
+ * @version 1.2.0
  * @see Lock
  * @see SimpleLock
  * @see TimeoutLock
@@ -44,7 +44,17 @@ public final class LockFactory {
     private static final Logger logger = Logger.getLogger(LockFactory.class.getName());
 
     /**
-     * Retrieves a lock instance by {@code LockType}.
+     * Retrieves a lock instance with {@code type} and {@code key}. It can be seen that parameter
+     * {@code type} is of type {@code int}, defining lock types by an integer. And the appointment
+     * can be list as below:
+     * <ul>
+     *     <li>Integer number 2 represents {@code Timeout Lock};</li>
+     *     <li>Integer number 4 represents {@code Reentrant Lock};</li>
+     *     <li>Integer number 8 represents {@code Read-Write Lock}, and</li>
+     *     <li>Any other numbers represent {@code Simple Lock}, but 1 is strongly recommended.</li>
+     * </ul>
+     * In order to acquire accesses for shared resources, generated lock resource should be transformed
+     * into an instance of a certain explicit sub-class.
      *
      * @param type lock type.
      * @param key  lock key.
@@ -56,6 +66,8 @@ public final class LockFactory {
                 return new TimeoutLock(key);
             case 4:
                 return new ReentrantLock(key);
+            case 8:
+                return new ReadWriteLock(key);
             default:
                 return new SimpleLock(key);
         }
@@ -153,6 +165,26 @@ public final class LockFactory {
      */
     public ReentrantLock forReentrantLock(Supplier<String> supplier) {
         return new ReentrantLock(supplier.get());
+    }
+
+    /**
+     * Retrieves an instance of {@link ReadWriteLock}.
+     *
+     * @param key lock key.
+     * @return an instance of type {@link ReadWriteLock}.
+     */
+    public ReadWriteLock forRWLock(String key) {
+        return new ReadWriteLock(key);
+    }
+
+    /**
+     * Retrieves an instance of {@link ReadWriteLock} with a functional interface {@link Supplier}
+     *
+     * @param supplier interface to provide a lock key.
+     * @return an instance of type {@link ReadWriteLock}.
+     */
+    public ReadWriteLock forRWLock(Supplier<String> supplier) {
+        return new ReadWriteLock(supplier.get());
     }
 
 }
