@@ -102,13 +102,12 @@ public final class Request implements Serializable {
      * Constructor for {@code Simple Lock} and {@code Reentrant Lock}, whether a lock request
      * which only support lock operation or an unlock request.
      *
-     * @param key
-     * @param application
-     * @param thread
-     * @param type
-     * @param lockRequest
+     * @param key         lock key
+     * @param application application name
+     * @param thread      thread name
+     * @param type        lock type, defined by an integer
+     * @param lockRequest if current request is a lock request
      */
-    @SuppressWarnings(value = {"JavaDoc"})
     public Request(String key, String application, String thread,
                    int type, boolean lockRequest) {
         this(key, application, thread, type, lockRequest, false);
@@ -118,14 +117,13 @@ public final class Request implements Serializable {
      * Constructor for {@code Simple Lock} and {@code Reentrant Lock}, whether a lock request
      * or an unlock request.
      *
-     * @param key
-     * @param application
-     * @param thread
-     * @param type
-     * @param lockRequest
-     * @param tryLock
+     * @param key         lock key
+     * @param application application name
+     * @param thread      thread name
+     * @param type        lock type, defined by an integer
+     * @param lockRequest if current request is a lock request
+     * @param tryLock     if current lock request acquires a lock resource with <code>try-lock</code>
      */
-    @SuppressWarnings(value = {"JavaDoc"})
     public Request(String key, String application, String thread,
                    int type, boolean lockRequest, boolean tryLock) {
         this(key, application, thread, type, lockRequest, tryLock, false);
@@ -134,16 +132,15 @@ public final class Request implements Serializable {
     /**
      * Typical constructor for {@code Timeout Lock}, whether a lock request or an unlock request.
      *
-     * @param key
-     * @param application
-     * @param thread
-     * @param type
-     * @param lockRequest
-     * @param tryLock
-     * @param time
-     * @param timeUnit
+     * @param key         lock key
+     * @param application application name
+     * @param thread      thread name
+     * @param type        lock type, defined by an integer
+     * @param lockRequest if current request is a lock request
+     * @param tryLock     if current lock request acquires a lock resource with <code>try-lock</code>
+     * @param time        time to expire
+     * @param timeUnit    time unit for expiration
      */
-    @SuppressWarnings(value = {"JavaDoc"})
     public Request(String key, String application, String thread,
                    int type, boolean lockRequest, boolean tryLock,
                    long time, TimeUnit timeUnit) {
@@ -154,15 +151,14 @@ public final class Request implements Serializable {
      * Typical constructor for {@code Read-Write Lock}, whether a lock request or an unlock
      * request.
      *
-     * @param key
-     * @param application
-     * @param thread
-     * @param type
-     * @param lockRequest
-     * @param tryLock
-     * @param readLock
+     * @param key         lock key
+     * @param application application name
+     * @param thread      thread name
+     * @param type        lock type, defined by an integer
+     * @param lockRequest if current request is a lock request
+     * @param tryLock     if current lock request acquires a lock resource with <code>try-lock</code>
+     * @param readLock    if current request is a read lock or not
      */
-    @SuppressWarnings(value = {"JavaDoc"})
     public Request(String key, String application, String thread,
                    int type, boolean lockRequest, boolean tryLock,
                    boolean readLock) {
@@ -179,7 +175,7 @@ public final class Request implements Serializable {
      * @param thread      thread name
      * @param type        lock type, defined by an integer
      * @param lockRequest if current request is a lock request
-     * @param tryLock     if current lock request acquires a lock resource with <code>try-lock</code>.
+     * @param tryLock     if current lock request acquires a lock resource with <code>try-lock</code>
      * @param time        time to expire
      * @param timeUnit    time unit for expiration
      * @param readLock    if current request is a read lock or not
@@ -235,7 +231,6 @@ public final class Request implements Serializable {
     }
 
     public int getIdentity() {
-        // TODO: 2021/8/28 仔细确认 identity 与哪些元素相关.
         return (this.key + this.thread + this.lockName() + this.requestName()).hashCode();
     }
 
@@ -263,7 +258,7 @@ public final class Request implements Serializable {
                 ", application='" + application + '\'' +
                 ", thread='" + thread + '\'' +
                 ", type=" + this.lockName() +
-                ", lock=" + lockRequest +
+                ", lockRequest=" + lockRequest +
                 ", tryLock=" + tryLock +
                 ", time=" + time +
                 ", timeUnit=" + timeUnit +

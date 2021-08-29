@@ -29,7 +29,7 @@ import java.util.logging.Logger;
  *     <li>{@link #forLock(Class, String)} with specified lock class object.</li>
  * </ol>
  * <p>
- * Besides, {@link LockFactory} provides explicit methods to generate specified locks.
+ * Besides, {@link LockFactory} provides explicit methods to generate locks with specified type.
  * For example, {@link #forSimpleLock(String)} retrieves an instance of type {@link SimpleLock}.
  *
  * @author Lam Tong
@@ -37,6 +37,8 @@ import java.util.logging.Logger;
  * @see Lock
  * @see SimpleLock
  * @see TimeoutLock
+ * @see ReentrantLock
+ * @see ReadWriteLock
  * @since 1.0.0
  */
 public final class LockFactory {
@@ -48,13 +50,21 @@ public final class LockFactory {
      * {@code type} is of type {@code int}, defining lock types by an integer. And the appointment
      * can be list as below:
      * <ul>
-     *     <li>Integer number 2 represents {@code Timeout Lock};</li>
-     *     <li>Integer number 4 represents {@code Reentrant Lock};</li>
-     *     <li>Integer number 8 represents {@code Read-Write Lock}, and</li>
-     *     <li>Any other numbers represent {@code Simple Lock}, but 1 is strongly recommended.</li>
+     *     <li>Integer number 2 represents {@link TimeoutLock};</li>
+     *     <li>Integer number 4 represents {@link ReentrantLock};</li>
+     *     <li>Integer number 8 represents {@link ReadWriteLock}, and</li>
+     *     <li>Any other numbers represent {@link SimpleLock}, but 1 is strongly recommended.</li>
      * </ul>
      * In order to acquire accesses for shared resources, generated lock resource should be transformed
-     * into an instance of a certain explicit sub-class.
+     * into an instance of a certain explicit sub-class. The idiom should be used as:
+     * <pre>
+     *     {@code
+     *     ...
+     *     LockFactory factory = new LockFactory();
+     *     SimpleLock lock = (SimpleLock) factory.forLock(1, "...");
+     *     ...
+     *     }
+     * </pre>
      *
      * @param type lock type.
      * @param key  lock key.
