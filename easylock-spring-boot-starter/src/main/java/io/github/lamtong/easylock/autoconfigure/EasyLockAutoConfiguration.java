@@ -16,6 +16,7 @@
 
 package io.github.lamtong.easylock.autoconfigure;
 
+import io.github.lamtong.easylock.autoconfigure.aspect.ReadWriteLockAspect;
 import io.github.lamtong.easylock.autoconfigure.aspect.SimpleLockAspect;
 import io.github.lamtong.easylock.autoconfigure.aspect.TimeoutLockAspect;
 import io.github.lamtong.easylock.client.connection.ClientProperties;
@@ -53,7 +54,7 @@ import java.util.logging.Logger;
  * @since 1.0.0
  */
 @Configuration
-@Import(value = {SimpleLockAspect.class, TimeoutLockAspect.class})
+@Import(value = {SimpleLockAspect.class, TimeoutLockAspect.class, ReadWriteLockAspect.class})
 @EnableConfigurationProperties(value = EasyLockProperties.class)
 @ConditionalOnClass(value = EasyLockProperties.class)
 public class EasyLockAutoConfiguration {
