@@ -187,4 +187,46 @@ public final class LockFactory {
         return new ReadWriteLock(supplier.get());
     }
 
+    /**
+     * Retrieves an instance of type {@link io.github.lamtong.easylock.client.lock.ReadWriteLock.ReadLock} directly.
+     *
+     * @param key lock key.
+     * @return an instance of type {@link io.github.lamtong.easylock.client.lock.ReadWriteLock.ReadLock}.
+     */
+    public ReadWriteLock.ReadLock forReadLock(String key) {
+        return new ReadWriteLock(key).readLock();
+    }
+
+    /**
+     * Retrieves an instance of type {@link io.github.lamtong.easylock.client.lock.ReadWriteLock.ReadLock} with
+     * a functional interface {@link Supplier} directly.
+     *
+     * @param supplier interface to provide a lock key.
+     * @return an instance of type {@link io.github.lamtong.easylock.client.lock.ReadWriteLock.ReadLock}.
+     */
+    public ReadWriteLock.ReadLock forReadLock(Supplier<String> supplier) {
+        return new ReadWriteLock.ReadLock(supplier.get());
+    }
+
+    /**
+     * Retrieves an instance of type {@link io.github.lamtong.easylock.client.lock.ReadWriteLock.WriteLock} directly.
+     *
+     * @param key lock key.
+     * @return an instance of type {@link io.github.lamtong.easylock.client.lock.ReadWriteLock.WriteLock}.
+     */
+    public ReadWriteLock.WriteLock forWriteLock(String key) {
+        return new ReadWriteLock(key).writeLock();
+    }
+
+    /**
+     * Retrieves an instance of type {@link io.github.lamtong.easylock.client.lock.ReadWriteLock.WriteLock} using
+     * a functional interface {@link Supplier}.
+     *
+     * @param supplier interface to provide a lock key.
+     * @return an instance of type {@link io.github.lamtong.easylock.client.lock.ReadWriteLock.WriteLock}.
+     */
+    public ReadWriteLock.WriteLock forWriteLock(Supplier<String> supplier) {
+        return new ReadWriteLock.WriteLock(supplier.get());
+    }
+
 }

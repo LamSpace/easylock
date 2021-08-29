@@ -122,7 +122,9 @@ public final class ReadWriteLock extends Lock {
     }
 
     /**
-     * {@link ReadLock} of {@link ReadWriteLock}.
+     * {@link ReadLock} of {@link ReadWriteLock}, which is inclusive. It can be inferred that shared resources
+     * can be accessed by threads which are holding on a {@link ReadLock} resource respectively without modifying
+     * the shared resources.
      *
      * @author Lam Tong
      * @version 1.2.0
@@ -200,7 +202,9 @@ public final class ReadWriteLock extends Lock {
     }
 
     /**
-     * {@link WriteLock} of {@link ReadWriteLock}.
+     * Exclusive {@link WriteLock} of {@link ReadWriteLock}, which indicates that if one thread holds on
+     * an instance {@link WriteLock} for shared resources, then any other accesses from other threads will
+     * be blocked until that thread releases the lock resource.
      *
      * @author Lam Tong
      * @version 1.2.0

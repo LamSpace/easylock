@@ -53,6 +53,8 @@ public final class RequestResolver implements Resolver {
 
     private static final ReentrantLockResolver reentrantLock = ReentrantLockResolver.getResolver();
 
+    private static final ReadWriteLockResolver readWriteLock = ReadWriteLockResolver.getResolver();
+
     @Override
     public Response resolve(Request request) {
         switch (request.getType()) {
@@ -60,6 +62,8 @@ public final class RequestResolver implements Resolver {
                 return timeoutLock.resolve(request);
             case 4:
                 return reentrantLock.resolve(request);
+            case 8:
+                return readWriteLock.resolve(request);
             default:
                 return simpleLock.resolve(request);
         }
