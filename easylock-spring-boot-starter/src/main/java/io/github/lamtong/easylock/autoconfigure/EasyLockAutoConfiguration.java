@@ -16,6 +16,7 @@
 
 package io.github.lamtong.easylock.autoconfigure;
 
+import io.github.lamtong.easylock.autoconfigure.aspect.EasyLockAspect;
 import io.github.lamtong.easylock.autoconfigure.aspect.ReadWriteLockAspect;
 import io.github.lamtong.easylock.autoconfigure.aspect.SimpleLockAspect;
 import io.github.lamtong.easylock.autoconfigure.aspect.TimeoutLockAspect;
@@ -50,11 +51,11 @@ import java.util.logging.Logger;
  * {@link Import} is used to activate annotations like {@link SimpleLockAspect}.
  *
  * @author Lam Tong
- * @version 1.2.0
+ * @version 1.2.1
  * @since 1.0.0
  */
 @Configuration
-@Import(value = {SimpleLockAspect.class, TimeoutLockAspect.class, ReadWriteLockAspect.class})
+@Import(value = {SimpleLockAspect.class, TimeoutLockAspect.class, ReadWriteLockAspect.class, EasyLockAspect.class})
 @EnableConfigurationProperties(value = EasyLockProperties.class)
 @ConditionalOnClass(value = EasyLockProperties.class)
 public class EasyLockAutoConfiguration {

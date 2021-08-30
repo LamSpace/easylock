@@ -35,7 +35,7 @@ import java.util.logging.Logger;
  * <code>Spring</code>.
  *
  * @author Lam Tong
- * @version 1.1.2
+ * @version 1.2.1
  * @see ByTimeoutLock
  * @since 1.1.0
  */
@@ -53,6 +53,7 @@ public class TimeoutLockAspect {
     }
 
     @Around(value = "timeoutLockAspect()")
+    @SuppressWarnings(value = {"Duplicates"})
     public Object aroundAdvice(ProceedingJoinPoint point) {
         MethodSignature signature = (MethodSignature) point.getSignature();
         ByTimeoutLock annotation = signature.getMethod().getAnnotation(ByTimeoutLock.class);
@@ -61,7 +62,7 @@ public class TimeoutLockAspect {
         boolean skipIfFalse = annotation.skipIfFalse();
         long time = annotation.time();
         TimeUnit unit = annotation.unit();
-        if (key.length() == 0) {
+        if (key.length() == 0 || key.trim().length() == 0) {
             if (logger.isLoggable(Level.SEVERE)) {
                 logger.log(Level.SEVERE, "Lock key should not be empty, method invocation fails.");
             }

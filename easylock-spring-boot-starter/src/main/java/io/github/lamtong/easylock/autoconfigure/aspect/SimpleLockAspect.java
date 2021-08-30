@@ -34,7 +34,7 @@ import java.util.logging.Logger;
  * of <code>Spring</code>.
  *
  * @author Lam Tong
- * @version 1.1.0
+ * @version 1.2.1
  * @see BySimpleLock
  * @since 1.0.0
  */
@@ -52,13 +52,14 @@ public class SimpleLockAspect {
     }
 
     @Around(value = "simpleLockAspect()")
+    @SuppressWarnings(value = {"Duplicates"})
     public Object aroundAdvice(ProceedingJoinPoint point) {
         MethodSignature signature = (MethodSignature) point.getSignature();
         BySimpleLock bySimpleLock = signature.getMethod().getAnnotation(BySimpleLock.class);
         String key = bySimpleLock.key();
         boolean tryLock = bySimpleLock.tryLock();
         boolean skipIfFalse = bySimpleLock.skipIfFalse();
-        if (key.length() == 0) {
+        if (key.length() == 0 || key.trim().length() == 0) {
             if (logger.isLoggable(Level.SEVERE)) {
                 logger.log(Level.SEVERE, "Lock key should not be empty, method invocation fails.");
             }

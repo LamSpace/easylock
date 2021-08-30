@@ -33,7 +33,7 @@ import java.util.logging.Logger;
  * {@link ReadWriteLockAspect} resolves methods annotated by {@link ByRWLock} via <code>AOP</code>.
  *
  * @author Lam Tong
- * @version 1.2.0
+ * @version 1.2.1
  * @see ByRWLock
  * @since 1.2.0
  */
@@ -51,6 +51,7 @@ public class ReadWriteLockAspect {
     }
 
     @Around(value = "readWriteLockAspect()")
+    @SuppressWarnings(value = {"Duplicates"})
     public Object aroundAdvice(ProceedingJoinPoint point) {
         MethodSignature signature = (MethodSignature) point.getSignature();
         ByRWLock annotation = signature.getMethod().getAnnotation(ByRWLock.class);
@@ -58,7 +59,7 @@ public class ReadWriteLockAspect {
         boolean readLock = annotation.readLock();
         boolean tryLock = annotation.tryLock();
         boolean skipIfFalse = annotation.skipIfFalse();
-        if (key.length() == 0) {
+        if (key.length() == 0 || key.trim().length() == 0) {
             if (logger.isLoggable(Level.SEVERE)) {
                 logger.log(Level.SEVERE, "Lock key should not be empty, method invocation fails.");
             }
