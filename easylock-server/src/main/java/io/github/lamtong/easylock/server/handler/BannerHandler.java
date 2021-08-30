@@ -29,7 +29,7 @@ import java.util.logging.Logger;
  * banner.
  *
  * @author Lam Tong
- * @version 1.2.0
+ * @version 1.2.1
  * @since 1.0.0
  */
 public final class BannerHandler {
