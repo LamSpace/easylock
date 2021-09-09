@@ -16,6 +16,7 @@
 
 package io.github.lamtong.easylock.autoconfigure;
 
+import io.github.lamtong.easylock.autoconfigure.annotation.BySimpleLock;
 import io.github.lamtong.easylock.autoconfigure.aspect.EasyLockAspect;
 import io.github.lamtong.easylock.autoconfigure.aspect.ReadWriteLockAspect;
 import io.github.lamtong.easylock.autoconfigure.aspect.SimpleLockAspect;
@@ -48,10 +49,11 @@ import java.util.logging.Logger;
  * <b>Usage of {@link Import}</b>
  * <p>
  * In order to configure <code>Aspect</code>s to process annotations provided by this starter,
- * {@link Import} is used to activate annotations like {@link SimpleLockAspect}.
+ * {@link Import} is used to activate annotations. For example, {@code @import(SimpleLockAspect.class)}
+ * will activate processes to methods, annotated by {@link BySimpleLock}.
  *
  * @author Lam Tong
- * @version 1.2.1
+ * @version 1.2.2
  * @since 1.0.0
  */
 @Configuration
@@ -89,11 +91,12 @@ public class EasyLockAutoConfiguration {
         if (logger.isLoggable(Level.INFO)) {
             logger.log(Level.INFO, "Properties for client and server has been updated.");
         }
-        connect();
+        this.connect();
     }
 
     /**
-     * Connects the server automatically after client's properties is set.
+     * Connects the server automatically after client's properties is set, making channels ready for locking
+     * and unlocking operations.
      */
     private void connect() {
         final LockFactory factory = getFactory();

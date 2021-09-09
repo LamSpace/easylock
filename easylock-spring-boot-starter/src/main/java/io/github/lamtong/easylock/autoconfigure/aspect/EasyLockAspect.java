@@ -36,7 +36,7 @@ import java.util.logging.Logger;
  * {@link EasyLockAspect} provides an aspect for annotation {@link ByEasyLock}.
  *
  * @author Lam Tong
- * @version 1.2.1
+ * @version 1.2.2
  * @see ByEasyLock
  * @since 1.2.1
  */
@@ -162,7 +162,9 @@ public class EasyLockAspect {
                     }
                 }
             } else {
-                ans = this.resolveWithWriteLock(lock, point);
+                if (lock.lock()) {
+                    ans = this.resolveWithWriteLock(lock, point);
+                }
             }
         }
         return ans;
