@@ -19,8 +19,8 @@ package io.github.lamtong.easylock.server.resolver;
 import io.github.lamtong.easylock.common.core.Request;
 import io.github.lamtong.easylock.common.core.Response;
 
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,7 +30,7 @@ import java.util.logging.Logger;
  * {@link AbstractLockResolver#resolve(Request)} has already define a template to resolve requests.
  *
  * @author Lam Tong
- * @version 1.2.0
+ * @version 1.3.0
  * @see AbstractLockResolver
  * @since 1.0.0
  */
@@ -38,6 +38,9 @@ public final class SimpleLockResolver extends AbstractLockResolver {
 
     private static final Logger logger = Logger.getLogger(SimpleLockResolver.class.getName());
 
+    /**
+     * Singleton of {@link SimpleLockResolver}.
+     */
     private static final SimpleLockResolver resolver = new SimpleLockResolver();
 
     private SimpleLockResolver() {
@@ -51,40 +54,29 @@ public final class SimpleLockResolver extends AbstractLockResolver {
     @SuppressWarnings("DuplicatedCode")
     public Response resolveTryLock(Request lockRequest) {
         String key = lockRequest.getKey();
-        if (!this.lockHolder.containsKey(key)) {
-            synchronized (this.lockMonitor) {
-                if (!this.lockHolder.containsKey(key)) {
-                    this.lockHolder.put(key, lockRequest);
-                    if (logger.isLoggable(Level.INFO)) {
-                        logger.log(Level.INFO, acquireLock(lockRequest));
-                    }
-                    return new Response(key, lockRequest.getIdentity(), true, SUCCEED,
-                            true);
-                }
+        Request request = this.lockHolder.putIfAbsent(key, lockRequest);
+        if (request == null) {
+            if (logger.isLoggable(Level.INFO)) {
+                logger.log(Level.INFO, acquireLock(lockRequest));
             }
+            return new Response(key, lockRequest.getIdentity(), true, SUCCEED, true);
         }
-        return new Response(key, lockRequest.getIdentity(), false, LOCKED_ALREADY,
-                true);
+        return new Response(key, lockRequest.getIdentity(), false, LOCKED_ALREADY, true);
     }
 
     @Override
     @SuppressWarnings("DuplicatedCode")
     public Response resolveLock(Request lockRequest) {
         String key = lockRequest.getKey();
-        if (!this.lockHolder.containsKey(key)) {
-            synchronized (this.lockMonitor) {
-                if (!this.lockHolder.containsKey(key)) {
-                    this.lockHolder.put(key, lockRequest);
-                    if (logger.isLoggable(Level.INFO)) {
-                        logger.log(Level.INFO, acquireLock(lockRequest));
-                    }
-                    return new Response(key, lockRequest.getIdentity(),
-                            true, SUCCEED, true);
-                }
+        Request request = this.lockHolder.putIfAbsent(key, lockRequest);
+        if (request == null) {
+            if (logger.isLoggable(Level.INFO)) {
+                logger.log(Level.INFO, acquireLock(lockRequest));
             }
+            return new Response(key, lockRequest.getIdentity(), true, SUCCEED, true);
         }
-        this.requests.computeIfAbsent(key, k -> new LinkedBlockingQueue<>());
-        this.permissions.computeIfAbsent(key, k -> new ArrayBlockingQueue<>(1));
+        this.requests.putIfAbsent(key, new LinkedBlockingQueue<>());
+        this.permissions.putIfAbsent(key, new SynchronousQueue<>());
         try {
             this.requests.get(key).put(new Object());
             this.permissions.get(key).take();
@@ -98,8 +90,7 @@ public final class SimpleLockResolver extends AbstractLockResolver {
         if (logger.isLoggable(Level.INFO)) {
             logger.log(Level.INFO, acquireLock(lockRequest));
         }
-        return new Response(key, lockRequest.getIdentity(),
-                true, SUCCEED, true);
+        return new Response(key, lockRequest.getIdentity(), true, SUCCEED, true);
     }
 
     @Override
@@ -111,9 +102,16 @@ public final class SimpleLockResolver extends AbstractLockResolver {
             logger.log(Level.INFO, releaseLock(unlockRequest));
         }
         try {
-            if (this.requests.containsKey(key) && !this.requests.get(key).isEmpty()) {
-                this.requests.get(key).take();
-                this.permissions.get(key).put(new Object());
+            if (this.requests.containsKey(key)) {
+                if (!this.requests.get(key).isEmpty()) {
+                    // If there exists more than one request to be resolved.
+                    this.requests.get(key).take();
+                    this.permissions.get(key).put(new Object());
+                } else {
+                    // Current unlock request is the last request to be resolved for that type of lock.
+                    this.requests.remove(key);
+                    this.permissions.remove(key);
+                }
             }
         } catch (InterruptedException e) {
             if (logger.isLoggable(Level.SEVERE)) {
@@ -121,20 +119,24 @@ public final class SimpleLockResolver extends AbstractLockResolver {
             }
             Thread.currentThread().interrupt();
         }
-        return new Response(key, unlockRequest.getIdentity(),
-                true, SUCCEED, false);
+        return new Response(key, unlockRequest.getIdentity(), true, SUCCEED, false);
     }
 
     @Override
     public String acquireLock(Request request) {
-        return "[" + request.getApplication() + SEPARATOR + request.getThread() +
-                "] acquires SimpleLock successfully.";
+        return String.format("[%s] - [%s] acquires SimpleLock successfully.",
+                request.getApplication(), request.getThread());
     }
 
     @Override
     public String releaseLock(Request request) {
-        return "[" + request.getApplication() + SEPARATOR + request.getThread() +
-                "] releases SimpleLock successfully.";
+        return String.format("[%s] - [%s] releases SimpleLock successfully.",
+                request.getApplication(), request.getThread());
+    }
+
+    @Override
+    public boolean isLocked(Request request) {
+        return false;
     }
 
 }

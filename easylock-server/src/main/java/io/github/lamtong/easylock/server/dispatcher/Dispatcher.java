@@ -14,25 +14,28 @@
  *  limitations under the License.
  */
 
-package io.github.lamtong.easylock.server.launcher;
+package io.github.lamtong.easylock.server.dispatcher;
 
-import io.github.lamtong.easylock.server.property.Properties;
+import io.github.lamtong.easylock.common.core.Request;
+import io.netty.channel.ChannelHandlerContext;
 
 /**
- * Interface {@link Launcher} abstracts the initialization procedure with {@link Properties}.
+ * {@link Dispatcher} is an entrance to resolve locking and unlocking requests.
  *
  * @author Lam Tong
  * @version 1.3.0
- * @see ServerLauncher
- * @since 1.0.0
+ * @see DefaultDispatcher
+ * @since 1.3.0
  */
-public interface Launcher {
+public interface Dispatcher {
 
     /**
-     * Launches specified application with specified properties.
+     * Dispatches current request with an instance of type {@link ChannelHandlerContext}, which is used to
+     * send back corresponding responses.
      *
-     * @param properties properties to launch application.
+     * @param context channel handler context.
+     * @param request request instance to be resolved.
      */
-    void launch(Properties properties);
+    void dispatch(ChannelHandlerContext context, Request request);
 
 }

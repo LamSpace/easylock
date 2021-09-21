@@ -28,7 +28,7 @@ import java.util.logging.Logger;
  * receive and handle responses from server for each channel.
  *
  * @author Lam Tong
- * @version 1.2.0
+ * @version 1.3.0
  * @since 1.0.0
  */
 public final class ResponseReceiver extends ChannelInboundHandlerAdapter {
@@ -52,6 +52,13 @@ public final class ResponseReceiver extends ChannelInboundHandlerAdapter {
         ctx.channel().close();
     }
 
+    /**
+     * When client read a response transferred from server, puts that response into the response
+     * cache pool, allowing threads retrieve corresponding response of their own.
+     *
+     * @param ctx channel handler context
+     * @param msg message from server
+     */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         cache.put(((Response) msg));

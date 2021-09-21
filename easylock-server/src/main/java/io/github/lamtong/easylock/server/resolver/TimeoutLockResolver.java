@@ -33,7 +33,7 @@ import java.util.logging.Logger;
  * by an instance of type {@link DelayQueue}.
  *
  * @author Lam Tong
- * @version 1.2.0
+ * @version 1.3.0
  * @see AbstractLockResolver
  * @since 1.1.0
  */
@@ -52,15 +52,21 @@ public final class TimeoutLockResolver extends AbstractLockResolver {
                     DelayLock lock = this.delayLocks.take();
                     Request request = this.lockHolder.get(lock.key);
                     if (request != null && request.getIdentity() == lock.identity) {
+                        // If expired lock request has not been removed from lock holder, then removes it.
                         this.lockHolder.remove(lock.key);
                         if (logger.isLoggable(Level.INFO)) {
-                            logger.log(Level.INFO, String.format("[%s] removes expired TimeoutLock {%s}.",
+                            logger.log(Level.INFO, String.format("[%s] removes expired TimeoutLock [%s].",
                                     Thread.currentThread().getName(), request.getKey()));
                         }
                         try {
-                            if (this.requests.containsKey(lock.key) && !this.requests.get(lock.key).isEmpty()) {
-                                this.requests.get(lock.key).take();
-                                this.permissions.get(lock.key).put(new Object());
+                            if (this.requests.containsKey(lock.key)) {
+                                if (!this.requests.get(lock.key).isEmpty()) {
+                                    this.requests.get(lock.key).take();
+                                    this.permissions.get(lock.key).put(new Object());
+                                } else {
+                                    this.requests.remove(lock.key);
+                                    this.permissions.remove(lock.key);
+                                }
                             }
                         } catch (InterruptedException e) {
                             if (logger.isLoggable(Level.SEVERE)) {
@@ -87,44 +93,33 @@ public final class TimeoutLockResolver extends AbstractLockResolver {
     @SuppressWarnings(value = {"Duplicates"})
     public Response resolveTryLock(Request lockRequest) {
         String key = lockRequest.getKey();
-        if (!this.lockHolder.containsKey(key)) {
-            synchronized (this.lockMonitor) {
-                if (!this.lockHolder.containsKey(key)) {
-                    this.lockHolder.put(key, lockRequest);
-                    this.delayLocks.put(new DelayLock(key, lockRequest.getIdentity(),
-                            lockRequest.getTime(), lockRequest.getTimeUnit()));
-                    if (logger.isLoggable(Level.INFO)) {
-                        logger.log(Level.INFO, acquireLock(lockRequest));
-                    }
-                    return new Response(key, lockRequest.getIdentity(),
-                            true, SUCCEED, true);
-                }
+        Request request = this.lockHolder.putIfAbsent(key, lockRequest);
+        if (request == null) {
+            this.delayLocks.put(new DelayLock(key, lockRequest.getIdentity(),
+                    lockRequest.getTime(), lockRequest.getTimeUnit()));
+            if (logger.isLoggable(Level.INFO)) {
+                logger.log(Level.INFO, acquireLock(lockRequest));
             }
+            return new Response(key, lockRequest.getIdentity(), true, SUCCEED, true);
         }
-        return new Response(key, lockRequest.getIdentity(), false, LOCKED_ALREADY,
-                true);
+        return new Response(key, lockRequest.getIdentity(), false, LOCKED_ALREADY, true);
     }
 
     @Override
     @SuppressWarnings(value = {"Duplicates"})
     public Response resolveLock(Request lockRequest) {
         String key = lockRequest.getKey();
-        if (!this.lockHolder.containsKey(key)) {
-            synchronized (this.lockMonitor) {
-                if (!this.lockHolder.containsKey(key)) {
-                    this.lockHolder.put(key, lockRequest);
-                    this.delayLocks.put(new DelayLock(key, lockRequest.getIdentity(),
-                            lockRequest.getTime(), lockRequest.getTimeUnit()));
-                    if (logger.isLoggable(Level.INFO)) {
-                        logger.log(Level.INFO, acquireLock(lockRequest));
-                    }
-                    return new Response(key, lockRequest.getIdentity(),
-                            true, SUCCEED, true);
-                }
+        Request request = this.lockHolder.putIfAbsent(key, lockRequest);
+        if (request == null) {
+            this.delayLocks.put(new DelayLock(key, lockRequest.getIdentity(),
+                    lockRequest.getTime(), lockRequest.getTimeUnit()));
+            if (logger.isLoggable(Level.INFO)) {
+                logger.log(Level.INFO, acquireLock(lockRequest));
             }
+            return new Response(key, lockRequest.getIdentity(), true, SUCCEED, true);
         }
-        this.requests.computeIfAbsent(key, k -> new LinkedBlockingQueue<>());
-        this.permissions.computeIfAbsent(key, k -> new ArrayBlockingQueue<>(1));
+        this.requests.putIfAbsent(key, new LinkedBlockingQueue<>());
+        this.permissions.putIfAbsent(key, new SynchronousQueue<>());
         try {
             this.requests.get(key).put(new Object());
             this.permissions.get(key).take();
@@ -140,8 +135,7 @@ public final class TimeoutLockResolver extends AbstractLockResolver {
         if (logger.isLoggable(Level.INFO)) {
             logger.log(Level.INFO, acquireLock(lockRequest));
         }
-        return new Response(key, lockRequest.getIdentity(), true, SUCCEED,
-                true);
+        return new Response(key, lockRequest.getIdentity(), true, SUCCEED, true);
     }
 
     @Override
@@ -159,9 +153,14 @@ public final class TimeoutLockResolver extends AbstractLockResolver {
                     logger.log(Level.INFO, releaseLock(unlockRequest));
                 }
                 try {
-                    if (this.requests.containsKey(key) && !this.requests.get(key).isEmpty()) {
-                        this.requests.get(key).take();
-                        this.permissions.get(key).put(new Object());
+                    if (this.requests.containsKey(key)) {
+                        if (!this.requests.get(key).isEmpty()) {
+                            this.requests.get(key).take();
+                            this.permissions.get(key).put(new Object());
+                        } else {
+                            this.requests.remove(key);
+                            this.permissions.remove(key);
+                        }
                     }
                 } catch (InterruptedException e) {
                     if (logger.isLoggable(Level.SEVERE)) {
@@ -169,8 +168,7 @@ public final class TimeoutLockResolver extends AbstractLockResolver {
                     }
                     Thread.currentThread().interrupt();
                 }
-                return new Response(key, unlockRequest.getIdentity(), true, SUCCEED,
-                        false);
+                return new Response(key, unlockRequest.getIdentity(), true, SUCCEED, false);
             } else {
                 // Lock expired and now is hold be another thread.
                 if (logger.isLoggable(Level.INFO)) {
@@ -179,8 +177,8 @@ public final class TimeoutLockResolver extends AbstractLockResolver {
                             unlockRequest.getApplication(), unlockRequest.getThread(),
                             request.getApplication(), request.getThread()));
                 }
-                return new Response(key, unlockRequest.getIdentity(), false, LOCK_EXPIRED,
-                        false);
+                // FIXME: 2021/9/18 这种请求下解锁有没有必要返回false.
+                return new Response(key, unlockRequest.getIdentity(), false, LOCK_EXPIRED, false);
             }
         } else {
             // Lock is not hold at server, namely expired.
@@ -195,14 +193,19 @@ public final class TimeoutLockResolver extends AbstractLockResolver {
 
     @Override
     public String acquireLock(Request request) {
-        return "[" + request.getApplication() + SEPARATOR + request.getThread() +
-                "] acquires TimeoutLock successfully.";
+        return String.format("[%s] - [%s] acquires TimeoutLock successfully.",
+                request.getApplication(), request.getThread());
     }
 
     @Override
     public String releaseLock(Request request) {
-        return "[" + request.getApplication() + SEPARATOR + request.getThread() +
-                "] releases TimeoutLock successfully.";
+        return String.format("[%s] - [%s] releases TimeoutLock successfully.",
+                request.getApplication(), request.getThread());
+    }
+
+    @Override
+    public boolean isLocked(Request request) {
+        return false;
     }
 
     /**

@@ -29,7 +29,7 @@ import java.util.logging.Logger;
  * banner.
  *
  * @author Lam Tong
- * @version 1.2.2
+ * @version 1.3.0
  * @since 1.0.0
  */
 public final class BannerHandler {
@@ -48,6 +48,9 @@ public final class BannerHandler {
         }
     }
 
+    /**
+     * Prints default banner if and only if "banner.txt" does not exist in classpath.
+     */
     private void displayDefaultBanner() {
         logger.log(Level.INFO,
                 "\n           _                                     _                             \n" +
@@ -60,9 +63,12 @@ public final class BannerHandler {
                         "                             /'                                                \n" +
                         "                     /     /'                                                  \n" +
                         "                    (___,/'                                                   \n" +
-                        "\n          Copyright 2021 the original author, Lam Tong, Version 1.2.2.\n");
+                        "\n          Copyright 2021 the original author, Lam Tong, Version 1.3.0.\n");
     }
 
+    /**
+     * Prints banner existing in classpath.
+     */
     private void displayBanner() {
         @SuppressWarnings("ConstantConditions")
         File file = new File(url.getPath());
@@ -78,7 +84,8 @@ public final class BannerHandler {
                 logger.log(Level.SEVERE, e.getMessage());
             }
         }
-        logger.log(Level.INFO, sb.toString());
+        String banner = sb.toString();
+        logger.log(Level.INFO, banner);
     }
 
 }

@@ -19,10 +19,7 @@ package io.github.lamtong.easylock.server.resolver;
 import io.github.lamtong.easylock.common.core.Request;
 import io.github.lamtong.easylock.common.core.Response;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -67,7 +64,7 @@ import java.util.logging.Logger;
  * {@code ReadLock} or a {@code WriteLock} once. Any invocation trying to lock again will fail.
  *
  * @author Lam Tong
- * @version 1.2.0
+ * @version 1.3.0
  * @see AbstractLockResolver
  * @since 1.2.0
  */
@@ -109,22 +106,17 @@ public final class ReadWriteLockResolver extends AbstractLockResolver {
     private Response resolveReadTryLock(Request request) {
         String key = request.getKey();
         if (!this.lockHolder.containsKey(key)) {
-            synchronized (this.lockMonitor) {
-                if (!this.lockHolder.containsKey(key)) {
-                    this.readLockHolder.computeIfAbsent(key, k -> new AtomicInteger());
-                    this.readLockHolder.get(key).incrementAndGet();
-                    if (logger.isLoggable(Level.INFO)) {
-                        logger.log(Level.INFO, this.acquireLock(request));
-                    }
-                    return new Response(key, request.getIdentity(), true, SUCCEED, true);
-                }
+            this.readLockHolder.putIfAbsent(key, new AtomicInteger());
+            this.readLockHolder.get(key).incrementAndGet();
+            if (logger.isLoggable(Level.INFO)) {
+                logger.log(Level.INFO, this.acquireLock(request));
             }
+            return new Response(key, request.getIdentity(), true, SUCCEED, true);
         }
         Request writeLockRequest = this.lockHolder.get(key);
-        // A write lock downgrades to a read lock.
-        if (request.getApplication().equals(writeLockRequest.getApplication()) &&
-                request.getThread().equals(writeLockRequest.getThread())) {
-            this.readLockHolder.computeIfAbsent(key, k -> new AtomicInteger());
+        // Write lock downgrades to read lock.
+        if (this.canDowngrade(request, writeLockRequest)) {
+            this.readLockHolder.putIfAbsent(key, new AtomicInteger());
             this.readLockHolder.get(key).incrementAndGet();
             if (logger.isLoggable(Level.INFO)) {
                 logger.log(Level.INFO, this.downgrade(request));
@@ -137,19 +129,16 @@ public final class ReadWriteLockResolver extends AbstractLockResolver {
     @SuppressWarnings(value = {"Duplicates"})
     private Response resolveWriteTryLock(Request request) {
         String key = request.getKey();
-        if (!this.lockHolder.containsKey(key) && !this.readLockHolder.containsKey(key)) {
-            synchronized (this.lockMonitor) {
-                if (!this.lockHolder.containsKey(key) && !this.readLockHolder.containsKey(key)) {
-                    this.lockHolder.put(key, request);
-                    if (logger.isLoggable(Level.INFO)) {
-                        logger.log(Level.INFO, this.acquireLock(request));
-                    }
-                    return new Response(key, request.getIdentity(), true, SUCCEED, true);
+        if (!this.readLockHolder.containsKey(key)) {
+            Request lockRequest = this.lockHolder.putIfAbsent(key, request);
+            if (lockRequest == null) {
+                if (logger.isLoggable(Level.INFO)) {
+                    logger.log(Level.INFO, this.acquireLock(request));
                 }
+                return new Response(key, request.getIdentity(), true, SUCCEED, true);
+            } else {
+                return new Response(key, request.getIdentity(), false, WL_EXISTS_WL_FAIL, true);
             }
-        }
-        if (this.lockHolder.containsKey(key)) {
-            return new Response(key, request.getIdentity(), false, WL_EXISTS_WL_FAIL, true);
         }
         return new Response(key, request.getIdentity(), false, RL_EXISTS_WL_FAIL, true);
     }
@@ -167,36 +156,30 @@ public final class ReadWriteLockResolver extends AbstractLockResolver {
     private Response resolveReadLock(Request request) {
         String key = request.getKey();
         if (!this.lockHolder.containsKey(key)) {
-            synchronized (this.lockMonitor) {
-                if (!this.lockHolder.containsKey(key)) {
-                    // If and only if no write lock exists, then read lock succeeds.
-                    this.readLockHolder.computeIfAbsent(key, k -> new AtomicInteger());
-                    this.readLockHolder.get(key).incrementAndGet();
-                    if (logger.isLoggable(Level.INFO)) {
-                        logger.log(Level.INFO, acquireLock(request));
-                    }
-                    return new Response(key, request.getIdentity(), true, SUCCEED, true);
-                }
+            this.readLockHolder.putIfAbsent(key, new AtomicInteger());
+            this.readLockHolder.get(key).incrementAndGet();
+            if (logger.isLoggable(Level.INFO)) {
+                logger.log(Level.INFO, acquireLock(request));
             }
+            return new Response(key, request.getIdentity(), true, SUCCEED, true);
         }
         Request writeLockRequest = this.lockHolder.get(key);
-        if (request.getApplication().equals(writeLockRequest.getApplication()) &&
-                request.getThread().equals(writeLockRequest.getThread())) {
-            // A write lock downgrades to a read lock.
-            this.readLockHolder.computeIfAbsent(key, k -> new AtomicInteger());
+        if (this.canDowngrade(request, writeLockRequest)) {
+            // Write lock downgrades to read lock.
+            this.readLockHolder.putIfAbsent(key, new AtomicInteger());
             this.readLockHolder.get(key).incrementAndGet();
             if (logger.isLoggable(Level.INFO)) {
                 logger.log(Level.INFO, downgrade(request));
             }
             return new Response(key, request.getIdentity(), true, SUCCEED, true);
         }
-        this.readLockRequests.computeIfAbsent(key, k -> new LinkedBlockingQueue<>());
-        this.readLockPermissions.computeIfAbsent(key, k -> new ArrayBlockingQueue<>(1));
-        // Demotion of WriteLock fails, then locking request of ReadLock is waiting until permitted.
+        // If write lock can not downgrade to read lock, then waiting until write lock is released.
+        this.readLockRequests.putIfAbsent(key, new LinkedBlockingQueue<>());
+        this.readLockPermissions.putIfAbsent(key, new SynchronousQueue<>());
         try {
             this.readLockRequests.get(key).put(new Object());
             this.readLockPermissions.get(key).take();
-            this.readLockHolder.computeIfAbsent(key, k -> new AtomicInteger());
+            this.readLockHolder.putIfAbsent(key, new AtomicInteger());
             this.readLockHolder.get(key).incrementAndGet();
         } catch (InterruptedException e) {
             if (logger.isLoggable(Level.SEVERE)) {
@@ -213,19 +196,17 @@ public final class ReadWriteLockResolver extends AbstractLockResolver {
     @SuppressWarnings(value = {"Duplicates"})
     private Response resolveWriteLock(Request request) {
         String key = request.getKey();
-        if (!this.lockHolder.containsKey(key) && !this.readLockHolder.containsKey(key)) {
-            synchronized (this.lockMonitor) {
-                if (!this.lockHolder.containsKey(key) && !this.readLockHolder.containsKey(key)) {
-                    this.lockHolder.put(key, request);
-                    if (logger.isLoggable(Level.INFO)) {
-                        logger.log(Level.INFO, acquireLock(request));
-                    }
-                    return new Response(key, request.getIdentity(), true, SUCCEED, true);
+        if (!this.readLockHolder.containsKey(key)) {
+            Request lockRequest = this.lockHolder.putIfAbsent(key, request);
+            if (lockRequest == null) {
+                if (logger.isLoggable(Level.INFO)) {
+                    logger.log(Level.INFO, acquireLock(request));
                 }
+                return new Response(key, request.getIdentity(), true, SUCCEED, true);
             }
         }
-        this.requests.computeIfAbsent(key, k -> new LinkedBlockingQueue<>());
-        this.permissions.computeIfAbsent(key, k -> new ArrayBlockingQueue<>(1));
+        this.requests.putIfAbsent(key, new LinkedBlockingQueue<>());
+        this.permissions.putIfAbsent(key, new SynchronousQueue<>());
         try {
             this.requests.get(key).put(new Object());
             this.permissions.get(key).take();
@@ -256,14 +237,24 @@ public final class ReadWriteLockResolver extends AbstractLockResolver {
         String key = request.getKey();
         int count = this.readLockHolder.get(key).get();
         if (count == 1) {
+            // Last read lock with specified key, and releases resources with that key.
             this.readLockHolder.remove(key);
+            this.readLockRequests.remove(key);
+            this.readLockPermissions.remove(key);
             if (logger.isLoggable(Level.INFO)) {
                 logger.log(Level.INFO, this.releaseReadLockCompletely(request));
             }
             try {
-                if (this.requests.containsKey(key) && !this.requests.get(key).isEmpty()) {
-                    this.requests.get(key).take();
-                    this.permissions.get(key).put(new Object());
+                // If there exists write lock requests with that key, permits one of these.
+                if (this.requests.containsKey(key)) {
+                    if (!this.requests.get(key).isEmpty()) {
+                        this.requests.get(key).take();
+                        this.permissions.get(key).put(new Object());
+                    } else {
+                        // Releases resources for write lock with that key.
+                        this.requests.remove(key);
+                        this.permissions.remove(key);
+                    }
                 }
             } catch (InterruptedException e) {
                 if (logger.isLoggable(Level.SEVERE)) {
@@ -290,8 +281,8 @@ public final class ReadWriteLockResolver extends AbstractLockResolver {
         // When a WriteLock is released, if there exists read locking requests, then handle first.
         if (this.readLockRequests.containsKey(key)) {
             try {
-                while (this.readLockRequests.get(key).peek() != null) {
-                    this.readLockRequests.get(key).take();
+                // Permits all read lock requests with that key.
+                while (this.readLockRequests.get(key).poll(500L, TimeUnit.MILLISECONDS) != null) {
                     this.readLockPermissions.get(key).put(new Object());
                 }
             } catch (InterruptedException e) {
@@ -306,11 +297,15 @@ public final class ReadWriteLockResolver extends AbstractLockResolver {
                 if (!this.requests.get(key).isEmpty()) {
                     this.requests.get(key).take();
                     this.permissions.get(key).put(new Object());
+                } else {
+                    this.requests.remove(key);
+                    this.permissions.remove(key);
                 }
             } catch (InterruptedException e) {
                 if (logger.isLoggable(Level.SEVERE)) {
                     logger.log(Level.SEVERE, e.getMessage());
                 }
+                Thread.currentThread().interrupt();
             }
         }
         return new Response(key, request.getIdentity(), true, SUCCEED, false);
@@ -326,13 +321,12 @@ public final class ReadWriteLockResolver extends AbstractLockResolver {
     }
 
     private String acquireReadLock(Request request) {
-        return String.format("[%s] - [%s] acquires ReadLock successfully, current ReadLock count: [%s].",
+        return String.format("[%s] - [%s] acquires ReadLock successfully, current ReadLock number: [%s].",
                 request.getApplication(), request.getThread(), this.readLockHolder.get(request.getKey()).get());
     }
 
     private String acquireWriteLock(Request request) {
-        return String.format("[%s] - [%s] acquires WriteLock successfully.",
-                request.getApplication(), request.getThread());
+        return String.format("[%s] - [%s] acquires WriteLock successfully.", request.getApplication(), request.getThread());
     }
 
     private String downgrade(Request request) {
@@ -350,7 +344,7 @@ public final class ReadWriteLockResolver extends AbstractLockResolver {
     }
 
     private String releaseReadLock(Request request) {
-        return String.format("[%s] - [%s] releases ReadLock successfully, current ReadLock count: [%s]",
+        return String.format("[%s] - [%s] releases ReadLock successfully, current ReadLock number: [%s]",
                 request.getApplication(), request.getThread(), this.readLockHolder.get(request.getKey()).get());
     }
 
@@ -360,6 +354,23 @@ public final class ReadWriteLockResolver extends AbstractLockResolver {
 
     private String releaseWriteLock(Request request) {
         return String.format("[%s] - [%s] releases WriteLock successfully.", request.getApplication(), request.getThread());
+    }
+
+    @Override
+    public boolean isLocked(Request request) {
+        return false;
+    }
+
+    /**
+     * Checks that whether write lock can downgrade to read lock.
+     *
+     * @param currentRequest   current request to acquire a read lock request.
+     * @param writeLockRequest exiting write lock request hold.
+     * @return true if and only if write lock can downgrade to read lock; otherwise, returns false.
+     */
+    private boolean canDowngrade(Request currentRequest, Request writeLockRequest) {
+        return currentRequest.getApplication().equals(writeLockRequest.getApplication()) &&
+                currentRequest.getThread().equals(writeLockRequest.getThread());
     }
 
 }

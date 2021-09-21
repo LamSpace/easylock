@@ -24,17 +24,40 @@ import io.github.lamtong.easylock.common.core.Response;
  * {@link LockResolver} defines three operations to resolve {@code LockRequest} or {@code UnlockRequest}.
  * Any implementation of {@link LockResolver} should override these methods to resolve requests for
  * a certain type of lock.
+ * <p>
+ * <b>Extension of {@link Resolver}</b>
+ * <p>
+ * {@link LockResolver} has extended {@link Resolver}, which can be regarded that {@link LockResolver} provide
+ * more functionality than {@link Resolver}.
  *
  * @author Lam Tong
- * @version 1.0.0
+ * @version 1.3.0
  * @since 1.0.0
  */
-public interface LockResolver {
+public interface LockResolver extends Resolver {
 
+    /**
+     * Resolves requests with {@code try-lock()} operations.
+     *
+     * @param lockRequest requests with {@code try-lock()} operation.
+     * @return response
+     */
     Response resolveTryLock(Request lockRequest);
 
+    /**
+     * Resolves requests with {@code lock()} operations.
+     *
+     * @param lockRequest requests with {@code lock()} operations.
+     * @return response
+     */
     Response resolveLock(Request lockRequest);
 
+    /**
+     * Resolves unlocking requests.
+     *
+     * @param unlockRequest unlocking request.
+     * @return response
+     */
     Response resolveUnlock(Request unlockRequest);
 
 }

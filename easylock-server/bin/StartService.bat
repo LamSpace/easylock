@@ -16,7 +16,7 @@ rem   limitations under the License.
 
 setlocal
 
-set lib=.;../lib/easylock-common-1.2.2.jar;../lib/netty-all-4.1.6.Final.jar;
+set lib=.;../lib/easylock-common-1.3.0.jar;../lib/netty-all-4.1.6.Final.jar;
 
 set conf=../conf
 

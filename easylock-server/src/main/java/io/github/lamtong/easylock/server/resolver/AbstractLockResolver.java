@@ -23,13 +23,13 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * {@link AbstractLockResolver} implements interface {@link Resolver} and {@link LockResolver}
- * at the same time to provide a template to resolve lock or unlock requests. Any implementations
- * of {@link AbstractLockResolver} should not and also can not override {@link #resolve(Request)}.
+ * {@link AbstractLockResolver} implements interface {@link LockResolver}, providing a template to
+ * resolve lock or unlock requests. Any implementations of {@link AbstractLockResolver} should not
+ * and also can not override {@link #resolve(Request)}.
  * <p>
  * As an abstract class, {@link AbstractLockResolver} contains some fields to support the process
- * of {@code LockRequest} and {@code UnlockRequest}, such as {@link #lockHolder}, {@link #lockMonitor}
- * {@link #permissions} and {@link #requests}.
+ * of {@code LockRequest} and {@code UnlockRequest}, such as {@link #lockHolder}, {@link #permissions}
+ * and {@link #requests}.
  * <p>
  * <b>Procedure of Locking</b>
  * <p>
@@ -41,12 +41,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * permission for locking.
  *
  * @author Lam Tong
- * @version 1.2.0
- * @see Resolver
+ * @version 1.3.0
  * @see LockResolver
  * @since 1.0.0
  */
-public abstract class AbstractLockResolver implements Resolver, LockResolver {
+public abstract class AbstractLockResolver implements LockResolver {
 
     protected static final String SUCCEED = "";
 
@@ -54,11 +53,7 @@ public abstract class AbstractLockResolver implements Resolver, LockResolver {
 
     protected static final String LOCK_EXPIRED = "Lock has expired already.";
 
-    protected static final String SEPARATOR = "] - [";
-
     protected final ConcurrentHashMap<String, Request> lockHolder = new ConcurrentHashMap<>();
-
-    protected final Object lockMonitor = new Object();
 
     protected final ConcurrentHashMap<String, BlockingQueue<Object>> requests = new ConcurrentHashMap<>();
 
@@ -75,17 +70,28 @@ public abstract class AbstractLockResolver implements Resolver, LockResolver {
         return this.resolveUnlock(request);
     }
 
-    @Override
-    public abstract Response resolveTryLock(Request lockRequest);
-
-    @Override
-    public abstract Response resolveLock(Request lockRequest);
-
-    @Override
-    public abstract Response resolveUnlock(Request unlockRequest);
-
+    /**
+     * Retrieves a message when acquiring a lock.
+     *
+     * @param request lock request.
+     * @return a message when acquiring a lock resource.
+     */
     public abstract String acquireLock(Request request);
 
+    /**
+     * Retrieves a message when releasing a lock.
+     *
+     * @param request unlock request.
+     * @return a message when releasing an
+     */
     public abstract String releaseLock(Request request);
+
+    /**
+     * Checks that whether lock resource has been acquires at least once.
+     *
+     * @param request lock request
+     * @return true if and only if lock resource has been acquires at least once.
+     */
+    public abstract boolean isLocked(Request request);
 
 }

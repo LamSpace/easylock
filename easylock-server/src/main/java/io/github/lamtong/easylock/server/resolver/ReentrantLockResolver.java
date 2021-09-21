@@ -19,9 +19,9 @@ package io.github.lamtong.easylock.server.resolver;
 import io.github.lamtong.easylock.common.core.Request;
 import io.github.lamtong.easylock.common.core.Response;
 
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,7 +43,7 @@ import java.util.logging.Logger;
  * resource will be hold forever, and any other threads gain no chance to acquire the lock.
  *
  * @author Lam Tong
- * @version 1.2.0
+ * @version 1.3.0
  * @see AbstractLockResolver
  * @since 1.1.0
  */
@@ -66,83 +66,69 @@ public final class ReentrantLockResolver extends AbstractLockResolver {
     @SuppressWarnings(value = {"Duplicates"})
     public Response resolveTryLock(Request lockRequest) {
         String key = lockRequest.getKey();
-        if (!this.lockHolder.containsKey(key)) {
-            synchronized (this.lockMonitor) {
-                if (!this.lockHolder.containsKey(key)) {
-                    this.lockHolder.put(key, lockRequest);
-                    this.lockCounter.computeIfAbsent(key, k -> new AtomicInteger());
-                    this.lockCounter.get(key).incrementAndGet();
-                    if (logger.isLoggable(Level.INFO)) {
-                        logger.log(Level.INFO, acquireLock(lockRequest));
-                    }
-                    return new Response(key, lockRequest.getIdentity(), true, SUCCEED,
-                            true);
-                }
+        Request request = this.lockHolder.putIfAbsent(key, lockRequest);
+        if (request == null) {
+            this.lockCounter.putIfAbsent(key, new AtomicInteger());
+            this.lockCounter.get(key).incrementAndGet();
+            if (logger.isLoggable(Level.INFO)) {
+                logger.log(Level.INFO, acquireLock(lockRequest));
             }
+            return new Response(key, lockRequest.getIdentity(), true, SUCCEED, true);
         }
-        //noinspection LoopConditionNotUpdatedInsideLoop
+        //noinspection LoopConditionNotUpdatedInsideLoop,StatementWithEmptyBody
         while (!this.lockHolder.containsKey(key)) {
             // Waiting until lock has been acquired.
         }
-        Request request = this.lockHolder.get(key);
+        request = this.lockHolder.get(key);
         if (request.getIdentity() != lockRequest.getIdentity()) {
             if (logger.isLoggable(Level.INFO)) {
-                logger.log(Level.INFO, "[" + lockRequest.getApplication() + SEPARATOR +
-                        lockRequest.getThread() + "] acquires ReentrantLock unsuccessfully, " +
-                        "current lock is hold by [" + request.getApplication() + SEPARATOR +
-                        request.getThread() + "].");
+                logger.log(Level.INFO, String.format("[%s] - [%s] acquires ReentrantLock unsuccessfully, current lock is hold by [%s] - [%s].",
+                        lockRequest.getApplication(), lockRequest.getThread(),
+                        request.getApplication(), request.getThread()));
             }
-            return new Response(key, lockRequest.getIdentity(), false, LOCKED_ALREADY,
-                    true);
+            return new Response(key, lockRequest.getIdentity(), false, LOCKED_ALREADY, true);
         }
         this.lockHolder.put(key, lockRequest);
         this.lockCounter.get(key).incrementAndGet();
         if (logger.isLoggable(Level.INFO)) {
             logger.log(Level.INFO, acquireLock(lockRequest));
         }
-        return new Response(key, lockRequest.getIdentity(), true, SUCCEED,
-                true);
+        return new Response(key, lockRequest.getIdentity(), true, SUCCEED, true);
     }
 
     @Override
     @SuppressWarnings(value = {"Duplicates"})
     public Response resolveLock(Request lockRequest) {
         String key = lockRequest.getKey();
-        if (!this.lockHolder.containsKey(key)) {
-            synchronized (this.lockMonitor) {
-                if (!this.lockHolder.containsKey(key)) {
-                    this.lockHolder.put(key, lockRequest);
-                    this.lockCounter.computeIfAbsent(key, k -> new AtomicInteger());
-                    this.lockCounter.get(key).incrementAndGet();
-                    if (logger.isLoggable(Level.INFO)) {
-                        logger.log(Level.INFO, acquireLock(lockRequest));
-                    }
-                    return new Response(key, lockRequest.getIdentity(), true, SUCCEED,
-                            true);
-                }
+        Request request = this.lockHolder.putIfAbsent(key, lockRequest);
+        if (request == null) {
+            this.lockCounter.putIfAbsent(key, new AtomicInteger());
+            this.lockCounter.get(key).incrementAndGet();
+            if (logger.isLoggable(Level.INFO)) {
+                logger.log(Level.INFO, acquireLock(lockRequest));
             }
+            return new Response(key, lockRequest.getIdentity(), true, SUCCEED, true);
         }
-        //noinspection LoopConditionNotUpdatedInsideLoop
+        //noinspection LoopConditionNotUpdatedInsideLoop,StatementWithEmptyBody
         while (!this.lockHolder.containsKey(key)) {
             // Waiting until lock has been acquired.
         }
-        Request request = this.lockHolder.get(key);
+        request = this.lockHolder.get(key);
         if (request.getIdentity() == lockRequest.getIdentity()) {
             this.lockHolder.put(key, lockRequest);
             this.lockCounter.get(key).incrementAndGet();
             if (logger.isLoggable(Level.INFO)) {
                 logger.log(Level.INFO, acquireLock(lockRequest));
             }
-            return new Response(key, lockRequest.getIdentity(), true, SUCCEED,
-                    true);
+            return new Response(key, lockRequest.getIdentity(), true, SUCCEED, true);
         }
-        this.requests.computeIfAbsent(key, k -> new LinkedBlockingQueue<>());
-        this.permissions.computeIfAbsent(key, k -> new ArrayBlockingQueue<>(1));
+        this.requests.putIfAbsent(key, new LinkedBlockingQueue<>());
+        this.permissions.putIfAbsent(key, new SynchronousQueue<>());
         try {
             this.requests.get(key).put(new Object());
             this.permissions.get(key).take();
             this.lockHolder.put(key, lockRequest);
-            this.lockCounter.computeIfAbsent(key, k -> new AtomicInteger());
+            this.lockCounter.putIfAbsent(key, new AtomicInteger());
             this.lockCounter.get(key).incrementAndGet();
             if (logger.isLoggable(Level.INFO)) {
                 logger.log(Level.INFO, acquireLock(lockRequest));
@@ -153,8 +139,7 @@ public final class ReentrantLockResolver extends AbstractLockResolver {
             }
             Thread.currentThread().interrupt();
         }
-        return new Response(key, lockRequest.getIdentity(), true, SUCCEED,
-                true);
+        return new Response(key, lockRequest.getIdentity(), true, SUCCEED, true);
     }
 
     @Override
@@ -169,9 +154,14 @@ public final class ReentrantLockResolver extends AbstractLockResolver {
                 logger.log(Level.INFO, releaseLockCompletely(unlockRequest));
             }
             try {
-                if (this.requests.containsKey(key) && !this.requests.get(key).isEmpty()) {
-                    this.requests.get(key).take();
-                    this.permissions.get(key).put(new Object());
+                if (this.requests.containsKey(key)) {
+                    if (!this.requests.get(key).isEmpty()) {
+                        this.requests.get(key).take();
+                        this.permissions.get(key).put(new Object());
+                    } else {
+                        this.requests.remove(key);
+                        this.permissions.remove(key);
+                    }
                 }
             } catch (InterruptedException e) {
                 if (logger.isLoggable(Level.SEVERE)) {
@@ -185,27 +175,34 @@ public final class ReentrantLockResolver extends AbstractLockResolver {
                 logger.log(Level.INFO, releaseLock(unlockRequest));
             }
         }
-        return new Response(key, unlockRequest.getIdentity(), true, SUCCEED,
-                false);
+        return new Response(key, unlockRequest.getIdentity(), true, SUCCEED, false);
     }
 
     @Override
     public String acquireLock(Request request) {
-        return "[" + request.getApplication() + SEPARATOR + request.getThread() +
-                "] acquires ReentrantLock successfully, current lock count: " +
-                this.lockCounter.get(request.getKey()).get() + ".";
+        return String.format("[%s] - [%s] acquires ReentrantLock successfully, current lock number: %s.",
+                request.getApplication(), request.getThread(), this.lockCounter.get(request.getKey()).get());
     }
 
     @Override
     public String releaseLock(Request request) {
-        return "[" + request.getApplication() + SEPARATOR + request.getThread() +
-                "] releases ReentrantLock successfully, current lock count: " +
-                this.lockCounter.get(request.getKey()).get() + ".";
+        return String.format("[%s] - [%s] releases ReentrantLock successfully, current lock number: %s.",
+                request.getApplication(), request.getThread(), this.lockCounter.get(request.getKey()).get());
+    }
+
+    @Override
+    public boolean isLocked(Request request) {
+        String key = request.getKey();
+        if (!this.lockHolder.containsKey(key)) {
+            return false;
+        }
+        Request lockRequest = this.lockHolder.get(key);
+        return request.getIdentity() == lockRequest.getIdentity();
     }
 
     public String releaseLockCompletely(Request request) {
-        return "[" + request.getApplication() + SEPARATOR + request.getThread() +
-                "] releases ReentrantLock completely.";
+        return String.format("[%s] - [%s] releases ReentrantLock completely.",
+                request.getApplication(), request.getThread());
     }
 
 }

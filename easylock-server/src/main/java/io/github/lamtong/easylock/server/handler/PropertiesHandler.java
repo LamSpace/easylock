@@ -40,13 +40,18 @@ import java.util.logging.Logger;
  * {@link ServerProperties} has the lowest priority.
  *
  * @author Lam Tong
- * @version 1.0.0
+ * @version 1.3.0
  * @since 1.0.0
  */
 public final class PropertiesHandler {
 
     private static final Logger logger = Logger.getLogger(PropertiesHandler.class.getName());
 
+    /**
+     * Handles properties to initialize server application.
+     *
+     * @param args properties from command line when starts.
+     */
     public void handleProperties(String[] args) {
         if (logger.isLoggable(Level.INFO)) {
             logger.log(Level.INFO, "Properties handled - {0}", Arrays.toString(args));

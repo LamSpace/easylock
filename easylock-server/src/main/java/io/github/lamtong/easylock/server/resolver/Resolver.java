@@ -27,19 +27,24 @@ import io.github.lamtong.easylock.common.core.Response;
  *     <li>Processed the {@code Lock Request} or {@code Unlock Request}.</li>
  * </ol>
  * Hence, implementations of {@link Resolver} should own these abilities to resolve requests.
- * One of these implementations is {@link RequestResolver}, which dispatches requests according
+ * One of these implementations is {@link AbstractLockResolver}, which dispatches requests according
  * to their {@link Request#type}. And another one is {@link AbstractLockResolver}, which implements
  * {@link Resolver} as well and defines a template to resolve requests for a certain type of lock
  * in {@link AbstractLockResolver#resolve(Request)}.
  *
  * @author Lam Tong
- * @version 1.2.0
- * @see RequestResolver
+ * @version 1.3.0
  * @see AbstractLockResolver
  * @since 1.0.0
  */
 public interface Resolver {
 
+    /**
+     * Resolves a request and returns corresponding response.
+     *
+     * @param request request to be resolved.
+     * @return corresponding response.
+     */
     Response resolve(Request request);
 
 }

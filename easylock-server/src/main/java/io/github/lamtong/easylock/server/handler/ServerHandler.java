@@ -17,34 +17,29 @@
 package io.github.lamtong.easylock.server.handler;
 
 import io.github.lamtong.easylock.common.core.Request;
-import io.github.lamtong.easylock.common.core.Response;
-import io.github.lamtong.easylock.server.resolver.RequestResolver;
+import io.github.lamtong.easylock.server.dispatcher.DefaultDispatcher;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * {@link ServerHandler} is a channel in-bound handler to activate or inactivate channels, receive message
  * from clients and so on. When {@link ServerHandler} receives a message from clients, it dispatches that
- * message to {@link RequestResolver} to resolve the lock or unlock request via a thread pool.
+ * message to {@link DefaultDispatcher} to resolve the lock or unlock requests.
  *
  * @author Lam Tong
- * @version 1.1.0
+ * @version 1.3.0
  * @see ChannelInboundHandlerAdapter
- * @see RequestResolver
+ * @see DefaultDispatcher
  * @since 1.0.0
  */
 public final class ServerHandler extends ChannelInboundHandlerAdapter {
 
     private static final Logger logger = Logger.getLogger(ServerHandler.class.getName());
 
-    private static final ExecutorService threads = Executors.newCachedThreadPool();
-
-    private static final RequestResolver resolver = new RequestResolver();
+    private static final DefaultDispatcher dispatcher = DefaultDispatcher.getInstance();
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
@@ -66,17 +61,7 @@ public final class ServerHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         Request request = ((Request) msg);
-        /*
-         * Here is the core and entry to resolve lock and unlock requests. The thinking of this core is to
-         * simulate the process of lock and unlock by multiple threads in a thread pool, which is to say that
-         * parallel requests execute parallel. For example, if 1,000 requests arrives simultaneously at a time,
-         * then 1,000 threads should be ready to resolve these requests. This may lead to the lack of limited
-         * resources, like CPU and memory. Of course, this kind of process method will be improved in the future.
-         */
-        threads.execute(() -> {
-            Response response = resolver.resolve(request);
-            ctx.writeAndFlush(response);
-        });
+        dispatcher.dispatch(ctx, request);
     }
 
     @Override
