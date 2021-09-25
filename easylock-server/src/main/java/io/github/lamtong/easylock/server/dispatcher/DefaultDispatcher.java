@@ -40,7 +40,7 @@ import java.util.concurrent.BlockingQueue;
  * via request's {@link Request#type} by wrapping into an instance of type {@link LockRequestMetaData}.
  *
  * @author Lam Tong
- * @version 1.3.0
+ * @version 1.3.1
  * @see Dispatcher
  * @see SimpleLockResolver
  * @see TimeoutLockResolver
@@ -80,14 +80,14 @@ public final class DefaultDispatcher implements Dispatcher {
     }
 
     /**
-     * Dispatches received requests by overridden method {@link #dispatch(ChannelHandlerContext, Request,
+     * Dispatches received requests by overridden method {@link #dispatch(ChannelHandlerContext, Request.RequestProto,
      * AbstractLockResolver, Pipeline)}.
      *
      * @param context channel handler context.
      * @param request request instance to be resolved.
      */
     @Override
-    public void dispatch(ChannelHandlerContext context, Request request) {
+    public void dispatch(ChannelHandlerContext context, Request.RequestProto request) {
         switch (request.getType()) {
             case 2:
                 this.dispatch(context, request, timeoutLock, timeoutLockHPipeline);
@@ -115,10 +115,10 @@ public final class DefaultDispatcher implements Dispatcher {
      * @param pipeline pipeline to resolve locking request with {@code lock()}, which requires waiting when lock
      *                 resource is not available.
      */
-    private void dispatch(ChannelHandlerContext context, Request request,
+    private void dispatch(ChannelHandlerContext context, Request.RequestProto request,
                           AbstractLockResolver resolver, Pipeline pipeline) {
         if (this.requestResolveImmediately(request)) {
-            Response response = resolver.resolve(request);
+            Response.ResponseProto response = resolver.resolve(request);
             context.writeAndFlush(response);
         } else {
             pipeline.put(new LockRequestMetaData(context, request));
@@ -133,8 +133,8 @@ public final class DefaultDispatcher implements Dispatcher {
      * @return true if and only if current request instance is an unlocking request or a try-lock request; otherwise,
      * returns false.
      */
-    private boolean requestResolveImmediately(Request request) {
-        return !request.isLockRequest() || request.isTryLock();
+    private boolean requestResolveImmediately(Request.RequestProto request) {
+        return !request.getLockRequest() || request.getTryLock();
     }
 
 }

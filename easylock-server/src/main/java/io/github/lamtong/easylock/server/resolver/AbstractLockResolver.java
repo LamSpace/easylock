@@ -41,7 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * permission for locking.
  *
  * @author Lam Tong
- * @version 1.3.0
+ * @version 1.3.1
  * @see LockResolver
  * @since 1.0.0
  */
@@ -53,16 +53,16 @@ public abstract class AbstractLockResolver implements LockResolver {
 
     protected static final String LOCK_EXPIRED = "Lock has expired already.";
 
-    protected final ConcurrentHashMap<String, Request> lockHolder = new ConcurrentHashMap<>();
+    protected final ConcurrentHashMap<String, Request.RequestProto> lockHolder = new ConcurrentHashMap<>();
 
     protected final ConcurrentHashMap<String, BlockingQueue<Object>> requests = new ConcurrentHashMap<>();
 
     protected final ConcurrentHashMap<String, BlockingQueue<Object>> permissions = new ConcurrentHashMap<>();
 
     @Override
-    public final Response resolve(Request request) {
-        if (request.isLockRequest()) {
-            if (request.isTryLock()) {
+    public final Response.ResponseProto resolve(Request.RequestProto request) {
+        if (request.getLockRequest()) {
+            if (request.getTryLock()) {
                 return this.resolveTryLock(request);
             }
             return this.resolveLock(request);
@@ -76,7 +76,7 @@ public abstract class AbstractLockResolver implements LockResolver {
      * @param request lock request.
      * @return a message when acquiring a lock resource.
      */
-    public abstract String acquireLock(Request request);
+    public abstract String acquireLock(Request.RequestProto request);
 
     /**
      * Retrieves a message when releasing a lock.
@@ -84,7 +84,7 @@ public abstract class AbstractLockResolver implements LockResolver {
      * @param request unlock request.
      * @return a message when releasing an
      */
-    public abstract String releaseLock(Request request);
+    public abstract String releaseLock(Request.RequestProto request);
 
     /**
      * Checks that whether lock resource has been acquires at least once.
@@ -92,6 +92,6 @@ public abstract class AbstractLockResolver implements LockResolver {
      * @param request lock request
      * @return true if and only if lock resource has been acquires at least once.
      */
-    public abstract boolean isLocked(Request request);
+    public abstract boolean isLocked(Request.RequestProto request);
 
 }

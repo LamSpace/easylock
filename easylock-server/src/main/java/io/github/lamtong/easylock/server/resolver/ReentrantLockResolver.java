@@ -43,7 +43,7 @@ import java.util.logging.Logger;
  * resource will be hold forever, and any other threads gain no chance to acquire the lock.
  *
  * @author Lam Tong
- * @version 1.3.0
+ * @version 1.3.1
  * @see AbstractLockResolver
  * @since 1.1.0
  */
@@ -64,16 +64,22 @@ public final class ReentrantLockResolver extends AbstractLockResolver {
 
     @Override
     @SuppressWarnings(value = {"Duplicates"})
-    public Response resolveTryLock(Request lockRequest) {
+    public Response.ResponseProto resolveTryLock(Request.RequestProto lockRequest) {
         String key = lockRequest.getKey();
-        Request request = this.lockHolder.putIfAbsent(key, lockRequest);
+        Request.RequestProto request = this.lockHolder.putIfAbsent(key, lockRequest);
         if (request == null) {
             this.lockCounter.putIfAbsent(key, new AtomicInteger());
             this.lockCounter.get(key).incrementAndGet();
             if (logger.isLoggable(Level.INFO)) {
                 logger.log(Level.INFO, acquireLock(lockRequest));
             }
-            return new Response(key, lockRequest.getIdentity(), true, SUCCEED, true);
+            return Response.ResponseProto.newBuilder()
+                    .setKey(key)
+                    .setIdentity(lockRequest.getIdentity())
+                    .setSuccess(true)
+                    .setCause(SUCCEED)
+                    .setLockResponse(true)
+                    .build();
         }
         //noinspection LoopConditionNotUpdatedInsideLoop,StatementWithEmptyBody
         while (!this.lockHolder.containsKey(key)) {
@@ -86,28 +92,46 @@ public final class ReentrantLockResolver extends AbstractLockResolver {
                         lockRequest.getApplication(), lockRequest.getThread(),
                         request.getApplication(), request.getThread()));
             }
-            return new Response(key, lockRequest.getIdentity(), false, LOCKED_ALREADY, true);
+            return Response.ResponseProto.newBuilder()
+                    .setKey(key)
+                    .setIdentity(lockRequest.getIdentity())
+                    .setSuccess(false)
+                    .setCause(LOCKED_ALREADY)
+                    .setLockResponse(true)
+                    .build();
         }
         this.lockHolder.put(key, lockRequest);
         this.lockCounter.get(key).incrementAndGet();
         if (logger.isLoggable(Level.INFO)) {
             logger.log(Level.INFO, acquireLock(lockRequest));
         }
-        return new Response(key, lockRequest.getIdentity(), true, SUCCEED, true);
+        return Response.ResponseProto.newBuilder()
+                .setKey(key)
+                .setIdentity(lockRequest.getIdentity())
+                .setSuccess(true)
+                .setCause(SUCCEED)
+                .setLockResponse(true)
+                .build();
     }
 
     @Override
     @SuppressWarnings(value = {"Duplicates"})
-    public Response resolveLock(Request lockRequest) {
+    public Response.ResponseProto resolveLock(Request.RequestProto lockRequest) {
         String key = lockRequest.getKey();
-        Request request = this.lockHolder.putIfAbsent(key, lockRequest);
+        Request.RequestProto request = this.lockHolder.putIfAbsent(key, lockRequest);
         if (request == null) {
             this.lockCounter.putIfAbsent(key, new AtomicInteger());
             this.lockCounter.get(key).incrementAndGet();
             if (logger.isLoggable(Level.INFO)) {
                 logger.log(Level.INFO, acquireLock(lockRequest));
             }
-            return new Response(key, lockRequest.getIdentity(), true, SUCCEED, true);
+            return Response.ResponseProto.newBuilder()
+                    .setKey(key)
+                    .setIdentity(lockRequest.getIdentity())
+                    .setSuccess(true)
+                    .setCause(SUCCEED)
+                    .setLockResponse(true)
+                    .build();
         }
         //noinspection LoopConditionNotUpdatedInsideLoop,StatementWithEmptyBody
         while (!this.lockHolder.containsKey(key)) {
@@ -120,7 +144,13 @@ public final class ReentrantLockResolver extends AbstractLockResolver {
             if (logger.isLoggable(Level.INFO)) {
                 logger.log(Level.INFO, acquireLock(lockRequest));
             }
-            return new Response(key, lockRequest.getIdentity(), true, SUCCEED, true);
+            return Response.ResponseProto.newBuilder()
+                    .setKey(key)
+                    .setIdentity(lockRequest.getIdentity())
+                    .setSuccess(true)
+                    .setCause(SUCCEED)
+                    .setLockResponse(true)
+                    .build();
         }
         this.requests.putIfAbsent(key, new LinkedBlockingQueue<>());
         this.permissions.putIfAbsent(key, new SynchronousQueue<>());
@@ -139,12 +169,18 @@ public final class ReentrantLockResolver extends AbstractLockResolver {
             }
             Thread.currentThread().interrupt();
         }
-        return new Response(key, lockRequest.getIdentity(), true, SUCCEED, true);
+        return Response.ResponseProto.newBuilder()
+                .setKey(key)
+                .setIdentity(lockRequest.getIdentity())
+                .setSuccess(true)
+                .setCause(SUCCEED)
+                .setLockResponse(true)
+                .build();
     }
 
     @Override
     @SuppressWarnings(value = {"Duplicates"})
-    public Response resolveUnlock(Request unlockRequest) {
+    public Response.ResponseProto resolveUnlock(Request.RequestProto unlockRequest) {
         String key = unlockRequest.getKey();
         int cnt = this.lockCounter.get(key).get();
         if (cnt == 1) {
@@ -175,32 +211,38 @@ public final class ReentrantLockResolver extends AbstractLockResolver {
                 logger.log(Level.INFO, releaseLock(unlockRequest));
             }
         }
-        return new Response(key, unlockRequest.getIdentity(), true, SUCCEED, false);
+        return Response.ResponseProto.newBuilder()
+                .setKey(key)
+                .setIdentity(unlockRequest.getIdentity())
+                .setSuccess(true)
+                .setCause(SUCCEED)
+                .setLockResponse(false)
+                .build();
     }
 
     @Override
-    public String acquireLock(Request request) {
+    public String acquireLock(Request.RequestProto request) {
         return String.format("[%s] - [%s] acquires ReentrantLock successfully, current lock number: %s.",
                 request.getApplication(), request.getThread(), this.lockCounter.get(request.getKey()).get());
     }
 
     @Override
-    public String releaseLock(Request request) {
+    public String releaseLock(Request.RequestProto request) {
         return String.format("[%s] - [%s] releases ReentrantLock successfully, current lock number: %s.",
                 request.getApplication(), request.getThread(), this.lockCounter.get(request.getKey()).get());
     }
 
     @Override
-    public boolean isLocked(Request request) {
+    public boolean isLocked(Request.RequestProto request) {
         String key = request.getKey();
         if (!this.lockHolder.containsKey(key)) {
             return false;
         }
-        Request lockRequest = this.lockHolder.get(key);
+        Request.RequestProto lockRequest = this.lockHolder.get(key);
         return request.getIdentity() == lockRequest.getIdentity();
     }
 
-    public String releaseLockCompletely(Request request) {
+    public String releaseLockCompletely(Request.RequestProto request) {
         return String.format("[%s] - [%s] releases ReentrantLock completely.",
                 request.getApplication(), request.getThread());
     }

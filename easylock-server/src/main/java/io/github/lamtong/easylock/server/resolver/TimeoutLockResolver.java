@@ -33,7 +33,7 @@ import java.util.logging.Logger;
  * by an instance of type {@link DelayQueue}.
  *
  * @author Lam Tong
- * @version 1.3.0
+ * @version 1.3.1
  * @see AbstractLockResolver
  * @since 1.1.0
  */
@@ -50,7 +50,7 @@ public final class TimeoutLockResolver extends AbstractLockResolver {
             for (; ; ) {
                 try {
                     DelayLock lock = this.delayLocks.take();
-                    Request request = this.lockHolder.get(lock.key);
+                    Request.RequestProto request = this.lockHolder.get(lock.key);
                     if (request != null && request.getIdentity() == lock.identity) {
                         // If expired lock request has not been removed from lock holder, then removes it.
                         this.lockHolder.remove(lock.key);
@@ -91,32 +91,50 @@ public final class TimeoutLockResolver extends AbstractLockResolver {
 
     @Override
     @SuppressWarnings(value = {"Duplicates"})
-    public Response resolveTryLock(Request lockRequest) {
+    public Response.ResponseProto resolveTryLock(Request.RequestProto lockRequest) {
         String key = lockRequest.getKey();
-        Request request = this.lockHolder.putIfAbsent(key, lockRequest);
+        Request.RequestProto request = this.lockHolder.putIfAbsent(key, lockRequest);
         if (request == null) {
             this.delayLocks.put(new DelayLock(key, lockRequest.getIdentity(),
-                    lockRequest.getTime(), lockRequest.getTimeUnit()));
+                    lockRequest.getTime()));
             if (logger.isLoggable(Level.INFO)) {
                 logger.log(Level.INFO, acquireLock(lockRequest));
             }
-            return new Response(key, lockRequest.getIdentity(), true, SUCCEED, true);
+            return Response.ResponseProto.newBuilder()
+                    .setKey(key)
+                    .setIdentity(lockRequest.getIdentity())
+                    .setSuccess(true)
+                    .setCause(SUCCEED)
+                    .setLockResponse(true)
+                    .build();
         }
-        return new Response(key, lockRequest.getIdentity(), false, LOCKED_ALREADY, true);
+        return Response.ResponseProto.newBuilder()
+                .setKey(key)
+                .setIdentity(lockRequest.getIdentity())
+                .setSuccess(false)
+                .setCause(LOCKED_ALREADY)
+                .setLockResponse(true)
+                .build();
     }
 
     @Override
     @SuppressWarnings(value = {"Duplicates"})
-    public Response resolveLock(Request lockRequest) {
+    public Response.ResponseProto resolveLock(Request.RequestProto lockRequest) {
         String key = lockRequest.getKey();
-        Request request = this.lockHolder.putIfAbsent(key, lockRequest);
+        Request.RequestProto request = this.lockHolder.putIfAbsent(key, lockRequest);
         if (request == null) {
             this.delayLocks.put(new DelayLock(key, lockRequest.getIdentity(),
-                    lockRequest.getTime(), lockRequest.getTimeUnit()));
+                    lockRequest.getTime()));
             if (logger.isLoggable(Level.INFO)) {
                 logger.log(Level.INFO, acquireLock(lockRequest));
             }
-            return new Response(key, lockRequest.getIdentity(), true, SUCCEED, true);
+            return Response.ResponseProto.newBuilder()
+                    .setKey(key)
+                    .setIdentity(lockRequest.getIdentity())
+                    .setSuccess(true)
+                    .setCause(SUCCEED)
+                    .setLockResponse(true)
+                    .build();
         }
         this.requests.putIfAbsent(key, new LinkedBlockingQueue<>());
         this.permissions.putIfAbsent(key, new SynchronousQueue<>());
@@ -125,7 +143,7 @@ public final class TimeoutLockResolver extends AbstractLockResolver {
             this.permissions.get(key).take();
             this.lockHolder.put(key, lockRequest);
             this.delayLocks.put(new DelayLock(key, lockRequest.getIdentity(),
-                    lockRequest.getTime(), lockRequest.getTimeUnit()));
+                    lockRequest.getTime()));
         } catch (InterruptedException e) {
             if (logger.isLoggable(Level.SEVERE)) {
                 logger.log(Level.SEVERE, e.getMessage());
@@ -135,14 +153,20 @@ public final class TimeoutLockResolver extends AbstractLockResolver {
         if (logger.isLoggable(Level.INFO)) {
             logger.log(Level.INFO, acquireLock(lockRequest));
         }
-        return new Response(key, lockRequest.getIdentity(), true, SUCCEED, true);
+        return Response.ResponseProto.newBuilder()
+                .setKey(key)
+                .setIdentity(lockRequest.getIdentity())
+                .setSuccess(true)
+                .setCause(SUCCEED)
+                .setLockResponse(true)
+                .build();
     }
 
     @Override
     @SuppressWarnings(value = {"Duplicates"})
-    public Response resolveUnlock(Request unlockRequest) {
+    public Response.ResponseProto resolveUnlock(Request.RequestProto unlockRequest) {
         String key = unlockRequest.getKey();
-        Request request = this.lockHolder.get(key);
+        Request.RequestProto request = this.lockHolder.get(key);
         if (request != null) {
             // Lock is still hold at server
             if (request.getApplication().equals(unlockRequest.getApplication()) &&
@@ -168,7 +192,13 @@ public final class TimeoutLockResolver extends AbstractLockResolver {
                     }
                     Thread.currentThread().interrupt();
                 }
-                return new Response(key, unlockRequest.getIdentity(), true, SUCCEED, false);
+                return Response.ResponseProto.newBuilder()
+                        .setKey(key)
+                        .setIdentity(unlockRequest.getIdentity())
+                        .setSuccess(true)
+                        .setCause(SUCCEED)
+                        .setLockResponse(false)
+                        .build();
             } else {
                 // Lock expired and now is hold be another thread.
                 if (logger.isLoggable(Level.INFO)) {
@@ -177,8 +207,13 @@ public final class TimeoutLockResolver extends AbstractLockResolver {
                             unlockRequest.getApplication(), unlockRequest.getThread(),
                             request.getApplication(), request.getThread()));
                 }
-                // FIXME: 2021/9/18 这种请求下解锁有没有必要返回false.
-                return new Response(key, unlockRequest.getIdentity(), false, LOCK_EXPIRED, false);
+                return Response.ResponseProto.newBuilder()
+                        .setKey(key)
+                        .setIdentity(unlockRequest.getIdentity())
+                        .setSuccess(true)
+                        .setCause(LOCK_EXPIRED)
+                        .setLockResponse(false)
+                        .build();
             }
         } else {
             // Lock is not hold at server, namely expired.
@@ -186,25 +221,30 @@ public final class TimeoutLockResolver extends AbstractLockResolver {
                 logger.log(Level.INFO, String.format("[%s] - [%s] releases TimeoutLock unsuccessfully " +
                         "due to expiration.", unlockRequest.getApplication(), unlockRequest.getThread()));
             }
-            return new Response(key, unlockRequest.getIdentity(), false, LOCK_EXPIRED,
-                    false);
+            return Response.ResponseProto.newBuilder()
+                    .setKey(key)
+                    .setIdentity(unlockRequest.getIdentity())
+                    .setSuccess(true)
+                    .setCause(LOCK_EXPIRED)
+                    .setLockResponse(false)
+                    .build();
         }
     }
 
     @Override
-    public String acquireLock(Request request) {
+    public String acquireLock(Request.RequestProto request) {
         return String.format("[%s] - [%s] acquires TimeoutLock successfully.",
                 request.getApplication(), request.getThread());
     }
 
     @Override
-    public String releaseLock(Request request) {
+    public String releaseLock(Request.RequestProto request) {
         return String.format("[%s] - [%s] releases TimeoutLock successfully.",
                 request.getApplication(), request.getThread());
     }
 
     @Override
-    public boolean isLocked(Request request) {
+    public boolean isLocked(Request.RequestProto request) {
         return false;
     }
 
@@ -212,7 +252,7 @@ public final class TimeoutLockResolver extends AbstractLockResolver {
      * Entity definition to record lock's information in {@link DelayQueue}.
      *
      * @author Lam Tong
-     * @version 1.1.0
+     * @version 1.3.1
      * @see Delayed
      * @since 1.1.0
      */
@@ -222,12 +262,12 @@ public final class TimeoutLockResolver extends AbstractLockResolver {
 
         String key;
 
-        int identity;
+        long identity;
 
-        public DelayLock(String key, int identity, long time, TimeUnit unit) {
+        public DelayLock(String key, long identity, long time) {
             this.key = key;
             this.identity = identity;
-            this.time = System.currentTimeMillis() + (time > 0 ? unit.toMillis(time) : 0);
+            this.time = System.currentTimeMillis() + (time > 0 ? time : 0);
         }
 
         @Override

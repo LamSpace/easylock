@@ -29,7 +29,7 @@ import java.util.logging.Logger;
  * banner.
  *
  * @author Lam Tong
- * @version 1.3.0
+ * @version 1.3.1
  * @since 1.0.0
  */
 public final class BannerHandler {
@@ -63,7 +63,7 @@ public final class BannerHandler {
                         "                             /'                                                \n" +
                         "                     /     /'                                                  \n" +
                         "                    (___,/'                                                   \n" +
-                        "\n          Copyright 2021 the original author, Lam Tong, Version 1.3.0.\n");
+                        "\n          Copyright 2021 the original author, Lam Tong, Version 1.3.1.\n");
     }
 
     /**

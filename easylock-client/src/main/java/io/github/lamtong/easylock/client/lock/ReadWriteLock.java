@@ -72,7 +72,7 @@ import java.util.logging.Logger;
  * {@code lock()} or {@code tryLock()} fails immediately.
  *
  * @author Lam Tong
- * @version 1.2.0
+ * @version 1.3.1
  * @see Lock
  * @since 1.2.0
  */
@@ -161,10 +161,18 @@ public final class ReadWriteLock extends Lock {
                 }
                 return false;
             }
-            Request request = new Request(this.getKey(), properties.getApplication(),
-                    Thread.currentThread().getName(), 8, true, tryLock, true);
-            Response response = sender.send(request);
-            if (response.isSuccess()) {
+            Request.RequestProto request = Request.RequestProto.newBuilder()
+                    .setKey(this.getKey())
+                    .setApplication(properties.getApplication())
+                    .setThread(Thread.currentThread().getName())
+                    .setType(8)
+                    .setLockRequest(true)
+                    .setTryLock(tryLock)
+                    .setReadLock(true)
+                    .setIdentity((this.getKey() + Thread.currentThread().getName() + "ReadWriteLock" + "Lock").hashCode())
+                    .build();
+            Response.ResponseProto response = sender.send(request);
+            if (response.getSuccess()) {
 //             There are two cases that this code will be executed.
 //                 1. lock() is invoked.
 //                 2. tryLock() is invoked and lock is acquired.
@@ -172,7 +180,7 @@ public final class ReadWriteLock extends Lock {
                 this.setCanUnlock(true);
                 this.setSuccess(true);
             }
-            return response.isSuccess();
+            return response.getSuccess();
         }
 
         @Override
@@ -189,14 +197,22 @@ public final class ReadWriteLock extends Lock {
                 }
                 return false;
             }
-            Request request = new Request(this.getKey(), properties.getApplication(),
-                    Thread.currentThread().getName(), 8, false, false, true);
-            Response response = sender.send(request);
-            if (response.isSuccess()) {
-                // Generally, unlock() always returns true.
+            Request.RequestProto request = Request.RequestProto.newBuilder()
+                    .setKey(this.getKey())
+                    .setApplication(properties.getApplication())
+                    .setThread(Thread.currentThread().getName())
+                    .setType(8)
+                    .setLockRequest(false)
+                    .setTryLock(false)
+                    .setReadLock(true)
+                    .setIdentity((this.getKey() + Thread.currentThread().getName() + "ReadWriteLock" + "Unlock").hashCode())
+                    .build();
+            Response.ResponseProto response = sender.send(request);
+            if (response.getSuccess()) {
+//                 Generally, unlock() always returns true.
                 this.setCanUnlock(false);
             }
-            return response.isSuccess();
+            return response.getSuccess();
         }
 
     }
@@ -241,10 +257,18 @@ public final class ReadWriteLock extends Lock {
                 }
                 return false;
             }
-            Request request = new Request(this.getKey(), properties.getApplication(),
-                    Thread.currentThread().getName(), 8, true, tryLock, false);
-            Response response = sender.send(request);
-            if (response.isSuccess()) {
+            Request.RequestProto request = Request.RequestProto.newBuilder()
+                    .setKey(this.getKey())
+                    .setApplication(properties.getApplication())
+                    .setThread(Thread.currentThread().getName())
+                    .setType(8)
+                    .setLockRequest(true)
+                    .setTryLock(tryLock)
+                    .setReadLock(false)
+                    .setIdentity((this.getKey() + Thread.currentThread().getName() + "ReadWriteLock" + "Lock").hashCode())
+                    .build();
+            Response.ResponseProto response = sender.send(request);
+            if (response.getSuccess()) {
 //             There are two cases that this code will be executed.
 //                 1. lock() is invoked.
 //                 2. tryLock() is invoked and lock is acquired.
@@ -252,7 +276,7 @@ public final class ReadWriteLock extends Lock {
                 this.setCanUnlock(true);
                 this.setSuccess(true);
             }
-            return response.isSuccess();
+            return response.getSuccess();
         }
 
         @Override
@@ -269,14 +293,22 @@ public final class ReadWriteLock extends Lock {
                 }
                 return false;
             }
-            Request request = new Request(this.getKey(), properties.getApplication(),
-                    Thread.currentThread().getName(), 8, false, false, false);
-            Response response = sender.send(request);
-            if (response.isSuccess()) {
+            Request.RequestProto request = Request.RequestProto.newBuilder()
+                    .setKey(this.getKey())
+                    .setApplication(properties.getApplication())
+                    .setThread(Thread.currentThread().getName())
+                    .setType(8)
+                    .setLockRequest(false)
+                    .setTryLock(false)
+                    .setReadLock(false)
+                    .setIdentity((this.getKey() + Thread.currentThread().getName() + "ReadWriteLock" + "Unlock").hashCode())
+                    .build();
+            Response.ResponseProto response = sender.send(request);
+            if (response.getSuccess()) {
                 // Generally, unlock() always returns true.
                 this.setCanUnlock(false);
             }
-            return response.isSuccess();
+            return response.getSuccess();
         }
 
     }

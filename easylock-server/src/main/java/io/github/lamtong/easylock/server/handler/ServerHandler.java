@@ -30,7 +30,7 @@ import java.util.logging.Logger;
  * message to {@link DefaultDispatcher} to resolve the lock or unlock requests.
  *
  * @author Lam Tong
- * @version 1.3.0
+ * @version 1.3.1
  * @see ChannelInboundHandlerAdapter
  * @see DefaultDispatcher
  * @since 1.0.0
@@ -60,7 +60,7 @@ public final class ServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        Request request = ((Request) msg);
+        Request.RequestProto request = (Request.RequestProto) msg;
         dispatcher.dispatch(ctx, request);
     }
 

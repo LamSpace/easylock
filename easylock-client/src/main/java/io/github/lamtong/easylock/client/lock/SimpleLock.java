@@ -49,7 +49,7 @@ import java.util.logging.Logger;
  * other threads gains no chances to acquire the lock unless the lock is released at server manually.
  *
  * @author Lam Tong
- * @version 1.2.0
+ * @version 1.3.1
  * @see Lock
  * @since 1.0.0
  */
@@ -91,10 +91,17 @@ public final class SimpleLock extends Lock {
             }
             return false;
         }
-        Request request = new Request(this.getKey(), properties.getApplication(),
-                Thread.currentThread().getName(), 1, true, tryLock);
-        Response response = sender.send(request);
-        if (response.isSuccess()) {
+        Request.RequestProto request = Request.RequestProto.newBuilder()
+                .setKey(this.getKey())
+                .setApplication(properties.getApplication())
+                .setThread(Thread.currentThread().getName())
+                .setType(1)
+                .setLockRequest(true)
+                .setTryLock(tryLock)
+                .setIdentity((this.getKey() + Thread.currentThread().getName() + "SimpleLock" + "Lock").hashCode())
+                .build();
+        Response.ResponseProto response = sender.send(request);
+        if (response.getSuccess()) {
 //             There are two cases that this code will be executed.
 //                 1. lock() is invoked.
 //                 2. tryLock() is invoked and lock is acquired.
@@ -102,7 +109,7 @@ public final class SimpleLock extends Lock {
             this.setCanUnlock(true);
             this.setSuccess(true);
         }
-        return response.isSuccess();
+        return response.getSuccess();
     }
 
     @Override
@@ -121,14 +128,20 @@ public final class SimpleLock extends Lock {
             }
             return false;
         }
-        Request request = new Request(this.getKey(), properties.getApplication(),
-                Thread.currentThread().getName(), 1, false);
-        Response response = sender.send(request);
-        if (response.isSuccess()) {
+        Request.RequestProto request = Request.RequestProto.newBuilder()
+                .setKey(this.getKey())
+                .setApplication(properties.getApplication())
+                .setThread(Thread.currentThread().getName())
+                .setType(1)
+                .setLockRequest(false)
+                .setIdentity((this.getKey() + Thread.currentThread().getName() + "SimpleLock" + "Unlock").hashCode())
+                .build();
+        Response.ResponseProto response = sender.send(request);
+        if (response.getSuccess()) {
             // Generally, unlock() always returns true.
             this.setCanUnlock(false);
         }
-        return response.isSuccess();
+        return response.getSuccess();
     }
 
 }

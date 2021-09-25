@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option java_package = "io.github.lamtong.easylock.common.core";
+option java_outer_classname = "Response";
+
+message ResponseProto {
+
+  string key = 1;
+
+  int64 identity = 2;
+
+  bool success = 3;
+
+  string cause = 4;
+
+  bool lockResponse = 5;
+
+}

@@ -46,7 +46,7 @@ import java.util.logging.Logger;
  * at server.
  *
  * @author Lam Tong
- * @version 1.2.0
+ * @version 1.3.1
  * @see Lock
  * @since 1.1.0
  */
@@ -82,16 +82,22 @@ public final class ReentrantLock extends Lock {
             }
             return false;
         }
-        Request request = new Request(this.getKey(), properties.getApplication(),
-                Thread.currentThread().getName(), 4, true,
-                tryLock);
-        Response response = sender.send(request);
-        if (response.isSuccess()) {
+        Request.RequestProto request = Request.RequestProto.newBuilder()
+                .setKey(this.getKey())
+                .setApplication(properties.getApplication())
+                .setThread(Thread.currentThread().getName())
+                .setType(4)
+                .setLockRequest(true)
+                .setTryLock(tryLock)
+                .setIdentity((this.getKey() + Thread.currentThread().getName() + "ReentrantLock" + "Lock").hashCode())
+                .build();
+        Response.ResponseProto response = sender.send(request);
+        if (response.getSuccess()) {
             this.setCanUnlock(true);
             this.setSuccess(true);
             this.count++;
         }
-        return response.isSuccess();
+        return response.getSuccess();
     }
 
     @Override
@@ -108,10 +114,16 @@ public final class ReentrantLock extends Lock {
             }
             return false;
         }
-        Request request = new Request(this.getKey(), properties.getApplication(),
-                Thread.currentThread().getName(), 4, false);
-        Response response = sender.send(request);
-        if (response.isSuccess()) {
+        Request.RequestProto request = Request.RequestProto.newBuilder()
+                .setKey(this.getKey())
+                .setApplication(properties.getApplication())
+                .setThread(Thread.currentThread().getName())
+                .setType(4)
+                .setLockRequest(false)
+                .setIdentity((this.getKey() + Thread.currentThread().getName() + "ReentrantLock" + "Unlock").hashCode())
+                .build();
+        Response.ResponseProto response = sender.send(request);
+        if (response.getSuccess()) {
             // If unlock succeeds, decrement lock count and set canUnlock to false until lock
             // count back to zero.
             this.count--;
@@ -119,7 +131,7 @@ public final class ReentrantLock extends Lock {
                 this.setCanUnlock(false);
             }
         }
-        return response.isSuccess();
+        return response.getSuccess();
     }
 
 }

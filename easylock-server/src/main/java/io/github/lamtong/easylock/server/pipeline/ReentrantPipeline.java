@@ -32,7 +32,7 @@ import java.util.logging.Logger;
  * {@code Pipeline} to resolve {@code ReentrantLock} with {@code lock()} operations.
  *
  * @author Lam Tong
- * @version 1.3.0
+ * @version 1.3.1
  * @see Pipeline
  * @since 1.3.0
  */
@@ -62,9 +62,9 @@ public final class ReentrantPipeline extends Pipeline {
                         Thread.currentThread().interrupt();
                     }
                     if (lockRequestMetaData != null) {
-                        Request request = lockRequestMetaData.getRequest();
+                        Request.RequestProto request = lockRequestMetaData.getRequest();
                         ChannelHandlerContext ctx = lockRequestMetaData.getCtx();
-                        Response response = resolver.resolve(request);
+                        Response.ResponseProto response = resolver.resolve(request);
                         ctx.writeAndFlush(response);
                     } else {
                         pipelines.remove(key);
@@ -84,10 +84,10 @@ public final class ReentrantPipeline extends Pipeline {
      * @param metaData metadata to be put
      */
     private void put(String key, LockRequestMetaData metaData) {
-        Request request = metaData.getRequest();
+        Request.RequestProto request = metaData.getRequest();
         if (this.resolver.isLocked(request)) {
             ChannelHandlerContext ctx = metaData.getCtx();
-            Response response = this.resolver.resolve(request);
+            Response.ResponseProto response = this.resolver.resolve(request);
             ctx.writeAndFlush(response);
         } else {
             try {

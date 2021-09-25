@@ -36,6 +36,6 @@ public interface Dispatcher {
      * @param context channel handler context.
      * @param request request instance to be resolved.
      */
-    void dispatch(ChannelHandlerContext context, Request request);
+    void dispatch(ChannelHandlerContext context, Request.RequestProto request);
 
 }

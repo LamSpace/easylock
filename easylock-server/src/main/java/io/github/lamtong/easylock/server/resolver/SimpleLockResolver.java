@@ -27,10 +27,10 @@ import java.util.logging.Logger;
 /**
  * {@link SimpleLockResolver} extends {@link AbstractLockResolver} and overrides those abstract methods
  * to fulfill the process for {@code LockRequest} and {@code UnlockRequest} due to that
- * {@link AbstractLockResolver#resolve(Request)} has already define a template to resolve requests.
+ * {@link AbstractLockResolver#resolve(Request.RequestProto)} has already define a template to resolve requests.
  *
  * @author Lam Tong
- * @version 1.3.0
+ * @version 1.3.1
  * @see AbstractLockResolver
  * @since 1.0.0
  */
@@ -52,28 +52,46 @@ public final class SimpleLockResolver extends AbstractLockResolver {
 
     @Override
     @SuppressWarnings("DuplicatedCode")
-    public Response resolveTryLock(Request lockRequest) {
+    public Response.ResponseProto resolveTryLock(Request.RequestProto lockRequest) {
         String key = lockRequest.getKey();
-        Request request = this.lockHolder.putIfAbsent(key, lockRequest);
+        Request.RequestProto request = this.lockHolder.putIfAbsent(key, lockRequest);
         if (request == null) {
             if (logger.isLoggable(Level.INFO)) {
                 logger.log(Level.INFO, acquireLock(lockRequest));
             }
-            return new Response(key, lockRequest.getIdentity(), true, SUCCEED, true);
+            return Response.ResponseProto.newBuilder()
+                    .setKey(key)
+                    .setIdentity(lockRequest.getIdentity())
+                    .setSuccess(true)
+                    .setCause(SUCCEED)
+                    .setLockResponse(true)
+                    .build();
         }
-        return new Response(key, lockRequest.getIdentity(), false, LOCKED_ALREADY, true);
+        return Response.ResponseProto.newBuilder()
+                .setKey(key)
+                .setIdentity(lockRequest.getIdentity())
+                .setSuccess(false)
+                .setCause(LOCKED_ALREADY)
+                .setLockResponse(true)
+                .build();
     }
 
     @Override
     @SuppressWarnings("DuplicatedCode")
-    public Response resolveLock(Request lockRequest) {
+    public Response.ResponseProto resolveLock(Request.RequestProto lockRequest) {
         String key = lockRequest.getKey();
-        Request request = this.lockHolder.putIfAbsent(key, lockRequest);
+        Request.RequestProto request = this.lockHolder.putIfAbsent(key, lockRequest);
         if (request == null) {
             if (logger.isLoggable(Level.INFO)) {
                 logger.log(Level.INFO, acquireLock(lockRequest));
             }
-            return new Response(key, lockRequest.getIdentity(), true, SUCCEED, true);
+            return Response.ResponseProto.newBuilder()
+                    .setKey(key)
+                    .setIdentity(lockRequest.getIdentity())
+                    .setSuccess(true)
+                    .setCause(SUCCEED)
+                    .setLockResponse(true)
+                    .build();
         }
         this.requests.putIfAbsent(key, new LinkedBlockingQueue<>());
         this.permissions.putIfAbsent(key, new SynchronousQueue<>());
@@ -90,12 +108,18 @@ public final class SimpleLockResolver extends AbstractLockResolver {
         if (logger.isLoggable(Level.INFO)) {
             logger.log(Level.INFO, acquireLock(lockRequest));
         }
-        return new Response(key, lockRequest.getIdentity(), true, SUCCEED, true);
+        return Response.ResponseProto.newBuilder()
+                .setKey(key)
+                .setIdentity(lockRequest.getIdentity())
+                .setSuccess(true)
+                .setCause(SUCCEED)
+                .setLockResponse(true)
+                .build();
     }
 
     @Override
     @SuppressWarnings(value = {"Duplicates"})
-    public Response resolveUnlock(Request unlockRequest) {
+    public Response.ResponseProto resolveUnlock(Request.RequestProto unlockRequest) {
         String key = unlockRequest.getKey();
         this.lockHolder.remove(key);
         if (logger.isLoggable(Level.INFO)) {
@@ -119,23 +143,29 @@ public final class SimpleLockResolver extends AbstractLockResolver {
             }
             Thread.currentThread().interrupt();
         }
-        return new Response(key, unlockRequest.getIdentity(), true, SUCCEED, false);
+        return Response.ResponseProto.newBuilder()
+                .setKey(key)
+                .setIdentity(unlockRequest.getIdentity())
+                .setSuccess(true)
+                .setCause(SUCCEED)
+                .setLockResponse(false)
+                .build();
     }
 
     @Override
-    public String acquireLock(Request request) {
+    public String acquireLock(Request.RequestProto request) {
         return String.format("[%s] - [%s] acquires SimpleLock successfully.",
                 request.getApplication(), request.getThread());
     }
 
     @Override
-    public String releaseLock(Request request) {
+    public String releaseLock(Request.RequestProto request) {
         return String.format("[%s] - [%s] releases SimpleLock successfully.",
                 request.getApplication(), request.getThread());
     }
 
     @Override
-    public boolean isLocked(Request request) {
+    public boolean isLocked(Request.RequestProto request) {
         return false;
     }
 

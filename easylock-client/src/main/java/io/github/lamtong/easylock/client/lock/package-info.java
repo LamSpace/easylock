@@ -22,11 +22,11 @@ import io.github.lamtong.easylock.common.core.Request;
  * Constant definitions of {@link Request} errors.
  *
  * @author Lam Tong
- * @version 1.2.0
+ * @version 1.3.1
  * @see Request
  * @since 1.2.0
  */
-class RequestError {
+final class RequestError {
 
     static final String EMPTY_LOCK_KEY = "Lock key should not be null or empty, reset lock key.";
 

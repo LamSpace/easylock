@@ -52,9 +52,9 @@ public final class RWPipeline extends Pipeline {
     @Override
     @SuppressWarnings(value = {"Duplicates"})
     public void put(LockRequestMetaData metaData) {
-        Request request = metaData.getRequest();
+        Request.RequestProto request = metaData.getRequest();
         String key = request.getKey();
-        if (request.isReadLock()) {
+        if (request.getReadLock()) {
             BlockingQueue<LockRequestMetaData> queue = this.readLockPipelines.putIfAbsent(key, new LinkedBlockingQueue<>());
             if (queue == null) {
                 pool.execute(() -> {
@@ -69,9 +69,9 @@ public final class RWPipeline extends Pipeline {
                             Thread.currentThread().interrupt();
                         }
                         if (lockRequestMetaData != null) {
-                            Request metaDataRequest = lockRequestMetaData.getRequest();
+                            Request.RequestProto metaDataRequest = lockRequestMetaData.getRequest();
                             ChannelHandlerContext ctx = lockRequestMetaData.getCtx();
-                            Response response = resolver.resolve(metaDataRequest);
+                            Response.ResponseProto response = resolver.resolve(metaDataRequest);
                             ctx.writeAndFlush(response);
                         } else {
                             readLockPipelines.remove(key);
@@ -96,9 +96,9 @@ public final class RWPipeline extends Pipeline {
                             Thread.currentThread().interrupt();
                         }
                         if (lockRequestMetaData != null) {
-                            Request metaDataRequest = lockRequestMetaData.getRequest();
+                            Request.RequestProto metaDataRequest = lockRequestMetaData.getRequest();
                             ChannelHandlerContext ctx = lockRequestMetaData.getCtx();
-                            Response response = resolver.resolve(metaDataRequest);
+                            Response.ResponseProto response = resolver.resolve(metaDataRequest);
                             ctx.writeAndFlush(response);
                         } else {
                             pipelines.remove(key);

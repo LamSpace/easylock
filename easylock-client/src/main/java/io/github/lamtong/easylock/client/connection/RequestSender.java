@@ -29,7 +29,7 @@ import java.util.logging.Logger;
  * to server and try to acquire corresponding response in {@link ResponseCache}.
  *
  * @author Lam Tong
- * @version 1.2.0
+ * @version 1.3.1
  * @see Request
  * @see Response
  * @since 1.0.0
@@ -54,10 +54,10 @@ public final class RequestSender {
      * @param request {@link Request} instance resolved at server.
      * @return corresponding response.
      */
-    public Response send(Request request) {
+    public Response.ResponseProto send(Request.RequestProto request) {
         final String key = request.getKey();
-        final boolean lockRequest = request.isLockRequest();
-        final int identity = request.getIdentity();
+        final boolean lockRequest = request.getLockRequest();
+        final long identity = request.getIdentity();
         final FixedChannelPool pool = ChannelPoolProvider.getPool();
         final ResponseCache cache = ResponseCache.getCache();
         pool.acquire().addListener((FutureListener<Channel>) f -> {
@@ -70,13 +70,21 @@ public final class RequestSender {
                 // Fails to acquire a channel, maybe the client fails to connect to server, or network breakdown.
                 // Thus requests cancel and responses are created at client to answer the requests.
                 if (lockRequest) {
-                    cache.put(new Response(key, identity, false,
-                            "Connection to server fails, lock request cancelled",
-                            true));
+                    cache.put(Response.ResponseProto.newBuilder()
+                            .setKey(key)
+                            .setIdentity(identity)
+                            .setSuccess(false)
+                            .setCause("Connection to server fails, lock request cancelled")
+                            .setLockResponse(true)
+                            .build());
                 } else {
-                    cache.put(new Response(key, identity, false,
-                            "Connection to server fails, unlock request cancelled",
-                            false));
+                    cache.put(Response.ResponseProto.newBuilder()
+                            .setKey(key)
+                            .setIdentity(identity)
+                            .setSuccess(false)
+                            .setCause("Connection to server fails, unlock request cancelled")
+                            .setLockResponse(false)
+                            .build());
                 }
             }
         });
@@ -93,13 +101,13 @@ public final class RequestSender {
         //       the request sends before, then current response in {@link ResponseCache} can be
         //       acquired with specified key and returned.
         //
-        Response response;
+        Response.ResponseProto response;
         for (; ; ) {
-            Response res;
+            Response.ResponseProto res;
             //noinspection StatementWithEmptyBody
             while ((res = cache.peek(key)) == null ||
-                    (res.isLockResponse() && !lockRequest) ||
-                    (!res.isLockResponse() && lockRequest)) {
+                    (res.getLockResponse() && !lockRequest) ||
+                    (!res.getLockResponse() && lockRequest)) {
                 // Waiting until corresponding response arrives.
             }
             if (res.getIdentity() == identity) {

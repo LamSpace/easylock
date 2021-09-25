@@ -33,7 +33,7 @@ import java.util.logging.Logger;
  * with {@code lock()} or {@code lock(long, Timeunit)} operations.
  *
  * @author Lam Tong
- * @version 1.3.0
+ * @version 1.3.1
  * @see Pipeline
  * @since 1.3.0
  */
@@ -63,9 +63,9 @@ public final class DefaultPipeline extends Pipeline {
                         Thread.currentThread().interrupt();
                     }
                     if (lockRequestMetaData != null) {
-                        Request request = lockRequestMetaData.getRequest();
+                        Request.RequestProto request = lockRequestMetaData.getRequest();
                         ChannelHandlerContext ctx = lockRequestMetaData.getCtx();
-                        Response response = resolver.resolve(request);
+                        Response.ResponseProto response = resolver.resolve(request);
                         ctx.writeAndFlush(response);
                     } else {
                         pipelines.remove(key);

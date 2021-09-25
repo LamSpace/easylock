@@ -64,7 +64,7 @@ import java.util.logging.Logger;
  * {@code ReadLock} or a {@code WriteLock} once. Any invocation trying to lock again will fail.
  *
  * @author Lam Tong
- * @version 1.3.0
+ * @version 1.3.1
  * @see AbstractLockResolver
  * @since 1.2.0
  */
@@ -94,8 +94,8 @@ public final class ReadWriteLockResolver extends AbstractLockResolver {
     }
 
     @Override
-    public Response resolveTryLock(Request lockRequest) {
-        if (lockRequest.isReadLock()) {
+    public Response.ResponseProto resolveTryLock(Request.RequestProto lockRequest) {
+        if (lockRequest.getReadLock()) {
             return this.resolveReadTryLock(lockRequest);
         } else {
             return this.resolveWriteTryLock(lockRequest);
@@ -103,7 +103,7 @@ public final class ReadWriteLockResolver extends AbstractLockResolver {
     }
 
     @SuppressWarnings(value = {"Duplicates"})
-    private Response resolveReadTryLock(Request request) {
+    private Response.ResponseProto resolveReadTryLock(Request.RequestProto request) {
         String key = request.getKey();
         if (!this.lockHolder.containsKey(key)) {
             this.readLockHolder.putIfAbsent(key, new AtomicInteger());
@@ -111,9 +111,15 @@ public final class ReadWriteLockResolver extends AbstractLockResolver {
             if (logger.isLoggable(Level.INFO)) {
                 logger.log(Level.INFO, this.acquireLock(request));
             }
-            return new Response(key, request.getIdentity(), true, SUCCEED, true);
+            return Response.ResponseProto.newBuilder()
+                    .setKey(key)
+                    .setIdentity(request.getIdentity())
+                    .setSuccess(true)
+                    .setCause(SUCCEED)
+                    .setLockResponse(true)
+                    .build();
         }
-        Request writeLockRequest = this.lockHolder.get(key);
+        Request.RequestProto writeLockRequest = this.lockHolder.get(key);
         // Write lock downgrades to read lock.
         if (this.canDowngrade(request, writeLockRequest)) {
             this.readLockHolder.putIfAbsent(key, new AtomicInteger());
@@ -121,31 +127,61 @@ public final class ReadWriteLockResolver extends AbstractLockResolver {
             if (logger.isLoggable(Level.INFO)) {
                 logger.log(Level.INFO, this.downgrade(request));
             }
-            return new Response(key, request.getIdentity(), true, SUCCEED, true);
+            return Response.ResponseProto.newBuilder()
+                    .setKey(key)
+                    .setIdentity(request.getIdentity())
+                    .setSuccess(true)
+                    .setCause(SUCCEED)
+                    .setLockResponse(true)
+                    .build();
         }
-        return new Response(key, request.getIdentity(), false, WL_EXISTS_RL_FAIL, true);
+        return Response.ResponseProto.newBuilder()
+                .setKey(key)
+                .setIdentity(request.getIdentity())
+                .setSuccess(false)
+                .setCause(WL_EXISTS_RL_FAIL)
+                .setLockResponse(true)
+                .build();
     }
 
     @SuppressWarnings(value = {"Duplicates"})
-    private Response resolveWriteTryLock(Request request) {
+    private Response.ResponseProto resolveWriteTryLock(Request.RequestProto request) {
         String key = request.getKey();
         if (!this.readLockHolder.containsKey(key)) {
-            Request lockRequest = this.lockHolder.putIfAbsent(key, request);
+            Request.RequestProto lockRequest = this.lockHolder.putIfAbsent(key, request);
             if (lockRequest == null) {
                 if (logger.isLoggable(Level.INFO)) {
                     logger.log(Level.INFO, this.acquireLock(request));
                 }
-                return new Response(key, request.getIdentity(), true, SUCCEED, true);
+                return Response.ResponseProto.newBuilder()
+                        .setKey(key)
+                        .setIdentity(request.getIdentity())
+                        .setSuccess(true)
+                        .setCause(SUCCEED)
+                        .setLockResponse(true)
+                        .build();
             } else {
-                return new Response(key, request.getIdentity(), false, WL_EXISTS_WL_FAIL, true);
+                return Response.ResponseProto.newBuilder()
+                        .setKey(key)
+                        .setIdentity(request.getIdentity())
+                        .setSuccess(false)
+                        .setCause(WL_EXISTS_WL_FAIL)
+                        .setLockResponse(true)
+                        .build();
             }
         }
-        return new Response(key, request.getIdentity(), false, RL_EXISTS_WL_FAIL, true);
+        return Response.ResponseProto.newBuilder()
+                .setKey(key)
+                .setIdentity(request.getIdentity())
+                .setSuccess(false)
+                .setCause(RL_EXISTS_WL_FAIL)
+                .setLockResponse(true)
+                .build();
     }
 
     @Override
-    public Response resolveLock(Request lockRequest) {
-        if (lockRequest.isReadLock()) {
+    public Response.ResponseProto resolveLock(Request.RequestProto lockRequest) {
+        if (lockRequest.getReadLock()) {
             return this.resolveReadLock(lockRequest);
         } else {
             return this.resolveWriteLock(lockRequest);
@@ -153,7 +189,7 @@ public final class ReadWriteLockResolver extends AbstractLockResolver {
     }
 
     @SuppressWarnings(value = {"Duplicates"})
-    private Response resolveReadLock(Request request) {
+    private Response.ResponseProto resolveReadLock(Request.RequestProto request) {
         String key = request.getKey();
         if (!this.lockHolder.containsKey(key)) {
             this.readLockHolder.putIfAbsent(key, new AtomicInteger());
@@ -161,9 +197,15 @@ public final class ReadWriteLockResolver extends AbstractLockResolver {
             if (logger.isLoggable(Level.INFO)) {
                 logger.log(Level.INFO, acquireLock(request));
             }
-            return new Response(key, request.getIdentity(), true, SUCCEED, true);
+            return Response.ResponseProto.newBuilder()
+                    .setKey(key)
+                    .setIdentity(request.getIdentity())
+                    .setSuccess(true)
+                    .setCause(SUCCEED)
+                    .setLockResponse(true)
+                    .build();
         }
-        Request writeLockRequest = this.lockHolder.get(key);
+        Request.RequestProto writeLockRequest = this.lockHolder.get(key);
         if (this.canDowngrade(request, writeLockRequest)) {
             // Write lock downgrades to read lock.
             this.readLockHolder.putIfAbsent(key, new AtomicInteger());
@@ -171,7 +213,13 @@ public final class ReadWriteLockResolver extends AbstractLockResolver {
             if (logger.isLoggable(Level.INFO)) {
                 logger.log(Level.INFO, downgrade(request));
             }
-            return new Response(key, request.getIdentity(), true, SUCCEED, true);
+            return Response.ResponseProto.newBuilder()
+                    .setKey(key)
+                    .setIdentity(request.getIdentity())
+                    .setSuccess(true)
+                    .setCause(SUCCEED)
+                    .setLockResponse(true)
+                    .build();
         }
         // If write lock can not downgrade to read lock, then waiting until write lock is released.
         this.readLockRequests.putIfAbsent(key, new LinkedBlockingQueue<>());
@@ -190,19 +238,31 @@ public final class ReadWriteLockResolver extends AbstractLockResolver {
         if (logger.isLoggable(Level.INFO)) {
             logger.log(Level.INFO, acquireLock(request));
         }
-        return new Response(key, request.getIdentity(), true, SUCCEED, true);
+        return Response.ResponseProto.newBuilder()
+                .setKey(key)
+                .setIdentity(request.getIdentity())
+                .setSuccess(true)
+                .setCause(SUCCEED)
+                .setLockResponse(true)
+                .build();
     }
 
     @SuppressWarnings(value = {"Duplicates"})
-    private Response resolveWriteLock(Request request) {
+    private Response.ResponseProto resolveWriteLock(Request.RequestProto request) {
         String key = request.getKey();
         if (!this.readLockHolder.containsKey(key)) {
-            Request lockRequest = this.lockHolder.putIfAbsent(key, request);
+            Request.RequestProto lockRequest = this.lockHolder.putIfAbsent(key, request);
             if (lockRequest == null) {
                 if (logger.isLoggable(Level.INFO)) {
                     logger.log(Level.INFO, acquireLock(request));
                 }
-                return new Response(key, request.getIdentity(), true, SUCCEED, true);
+                return Response.ResponseProto.newBuilder()
+                        .setKey(key)
+                        .setIdentity(request.getIdentity())
+                        .setSuccess(true)
+                        .setCause(SUCCEED)
+                        .setLockResponse(true)
+                        .build();
             }
         }
         this.requests.putIfAbsent(key, new LinkedBlockingQueue<>());
@@ -220,12 +280,18 @@ public final class ReadWriteLockResolver extends AbstractLockResolver {
         if (logger.isLoggable(Level.INFO)) {
             logger.log(Level.INFO, acquireLock(request));
         }
-        return new Response(key, request.getIdentity(), true, SUCCEED, true);
+        return Response.ResponseProto.newBuilder()
+                .setKey(key)
+                .setIdentity(request.getIdentity())
+                .setSuccess(true)
+                .setCause(SUCCEED)
+                .setLockResponse(true)
+                .build();
     }
 
     @Override
-    public Response resolveUnlock(Request unlockRequest) {
-        if (unlockRequest.isReadLock()) {
+    public Response.ResponseProto resolveUnlock(Request.RequestProto unlockRequest) {
+        if (unlockRequest.getReadLock()) {
             return this.resolveReadUnlock(unlockRequest);
         } else {
             return this.resolveWriteUnlock(unlockRequest);
@@ -233,7 +299,7 @@ public final class ReadWriteLockResolver extends AbstractLockResolver {
     }
 
     @SuppressWarnings(value = {"Duplicates"})
-    private Response resolveReadUnlock(Request request) {
+    private Response.ResponseProto resolveReadUnlock(Request.RequestProto request) {
         String key = request.getKey();
         int count = this.readLockHolder.get(key).get();
         if (count == 1) {
@@ -269,10 +335,16 @@ public final class ReadWriteLockResolver extends AbstractLockResolver {
                 logger.log(Level.INFO, this.releaseLock(request));
             }
         }
-        return new Response(key, request.getIdentity(), true, SUCCEED, false);
+        return Response.ResponseProto.newBuilder()
+                .setKey(key)
+                .setIdentity(request.getIdentity())
+                .setSuccess(true)
+                .setCause(SUCCEED)
+                .setLockResponse(false)
+                .build();
     }
 
-    private Response resolveWriteUnlock(Request request) {
+    private Response.ResponseProto resolveWriteUnlock(Request.RequestProto request) {
         String key = request.getKey();
         this.lockHolder.remove(key);
         if (logger.isLoggable(Level.INFO)) {
@@ -308,56 +380,62 @@ public final class ReadWriteLockResolver extends AbstractLockResolver {
                 Thread.currentThread().interrupt();
             }
         }
-        return new Response(key, request.getIdentity(), true, SUCCEED, false);
+        return Response.ResponseProto.newBuilder()
+                .setKey(key)
+                .setIdentity(request.getIdentity())
+                .setSuccess(true)
+                .setCause(SUCCEED)
+                .setLockResponse(false)
+                .build();
     }
 
     @Override
-    public String acquireLock(Request request) {
-        if (request.isReadLock()) {
+    public String acquireLock(Request.RequestProto request) {
+        if (request.getReadLock()) {
             return this.acquireReadLock(request);
         } else {
             return this.acquireWriteLock(request);
         }
     }
 
-    private String acquireReadLock(Request request) {
+    private String acquireReadLock(Request.RequestProto request) {
         return String.format("[%s] - [%s] acquires ReadLock successfully, current ReadLock number: [%s].",
                 request.getApplication(), request.getThread(), this.readLockHolder.get(request.getKey()).get());
     }
 
-    private String acquireWriteLock(Request request) {
+    private String acquireWriteLock(Request.RequestProto request) {
         return String.format("[%s] - [%s] acquires WriteLock successfully.", request.getApplication(), request.getThread());
     }
 
-    private String downgrade(Request request) {
+    private String downgrade(Request.RequestProto request) {
         return String.format("[%s] - [%s] acquires ReadLock successfully, current WriteLock downgrades to ReadLock.",
                 request.getApplication(), request.getThread());
     }
 
     @Override
-    public String releaseLock(Request request) {
-        if (request.isReadLock()) {
+    public String releaseLock(Request.RequestProto request) {
+        if (request.getReadLock()) {
             return this.releaseReadLock(request);
         } else {
             return this.releaseWriteLock(request);
         }
     }
 
-    private String releaseReadLock(Request request) {
+    private String releaseReadLock(Request.RequestProto request) {
         return String.format("[%s] - [%s] releases ReadLock successfully, current ReadLock number: [%s]",
                 request.getApplication(), request.getThread(), this.readLockHolder.get(request.getKey()).get());
     }
 
-    private String releaseReadLockCompletely(Request request) {
+    private String releaseReadLockCompletely(Request.RequestProto request) {
         return String.format("[%s] - [%s] releases ReadLock completely.", request.getApplication(), request.getThread());
     }
 
-    private String releaseWriteLock(Request request) {
+    private String releaseWriteLock(Request.RequestProto request) {
         return String.format("[%s] - [%s] releases WriteLock successfully.", request.getApplication(), request.getThread());
     }
 
     @Override
-    public boolean isLocked(Request request) {
+    public boolean isLocked(Request.RequestProto request) {
         return false;
     }
 
@@ -368,7 +446,7 @@ public final class ReadWriteLockResolver extends AbstractLockResolver {
      * @param writeLockRequest exiting write lock request hold.
      * @return true if and only if write lock can downgrade to read lock; otherwise, returns false.
      */
-    private boolean canDowngrade(Request currentRequest, Request writeLockRequest) {
+    private boolean canDowngrade(Request.RequestProto currentRequest, Request.RequestProto writeLockRequest) {
         return currentRequest.getApplication().equals(writeLockRequest.getApplication()) &&
                 currentRequest.getThread().equals(writeLockRequest.getThread());
     }

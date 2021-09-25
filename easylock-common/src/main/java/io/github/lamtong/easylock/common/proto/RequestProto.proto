@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+option java_package = "io.github.lamtong.easylock.common.core";
+option java_outer_classname = "Request";
+
+message RequestProto {
+
+  string key = 1;
+
+  string application = 2;
+
+  string thread = 3;
+
+  int64 identity = 4;
+
+  int32 type = 5;
+
+  bool lockRequest = 6;
+
+  bool tryLock = 7;
+
+  int64 time = 8;
+
+  bool readLock = 9;
+
+}

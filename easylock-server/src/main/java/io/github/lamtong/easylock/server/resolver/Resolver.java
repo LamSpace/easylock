@@ -30,10 +30,10 @@ import io.github.lamtong.easylock.common.core.Response;
  * One of these implementations is {@link AbstractLockResolver}, which dispatches requests according
  * to their {@link Request#type}. And another one is {@link AbstractLockResolver}, which implements
  * {@link Resolver} as well and defines a template to resolve requests for a certain type of lock
- * in {@link AbstractLockResolver#resolve(Request)}.
+ * in {@link AbstractLockResolver#resolve(Request.RequestProto)}.
  *
  * @author Lam Tong
- * @version 1.3.0
+ * @version 1.3.1
  * @see AbstractLockResolver
  * @since 1.0.0
  */
@@ -45,6 +45,6 @@ public interface Resolver {
      * @param request request to be resolved.
      * @return corresponding response.
      */
-    Response resolve(Request request);
+    Response.ResponseProto resolve(Request.RequestProto request);
 
 }

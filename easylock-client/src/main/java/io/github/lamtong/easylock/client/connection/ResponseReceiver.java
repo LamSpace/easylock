@@ -28,7 +28,7 @@ import java.util.logging.Logger;
  * receive and handle responses from server for each channel.
  *
  * @author Lam Tong
- * @version 1.3.0
+ * @version 1.3.1
  * @since 1.0.0
  */
 public final class ResponseReceiver extends ChannelInboundHandlerAdapter {
@@ -61,7 +61,7 @@ public final class ResponseReceiver extends ChannelInboundHandlerAdapter {
      */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        cache.put(((Response) msg));
+        cache.put(((Response.ResponseProto) msg));
     }
 
     @Override

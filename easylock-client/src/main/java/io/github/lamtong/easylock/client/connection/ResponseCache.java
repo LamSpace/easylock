@@ -39,7 +39,7 @@ import java.util.logging.Logger;
  * arrives, then {@link Response#identity} will be verified for each thread.
  *
  * @author Lam Tong
- * @version 1.2.0
+ * @version 1.3.1
  * @since 1.0.0
  */
 public final class ResponseCache {
@@ -51,7 +51,7 @@ public final class ResponseCache {
     /**
      * Cache pool to store received responses for threads.
      */
-    private final ConcurrentHashMap<String, BlockingQueue<Response>> cachePool = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, BlockingQueue<Response.ResponseProto>> cachePool = new ConcurrentHashMap<>();
 
     private ResponseCache() {
     }
@@ -68,7 +68,7 @@ public final class ResponseCache {
      * @return the first element for specified lock if and only if corresponding response
      * arrives; otherwise, returns null.
      */
-    public Response peek(String key) {
+    public Response.ResponseProto peek(String key) {
         return Optional.ofNullable(this.cachePool.get(key))
                 .map(BlockingQueue::peek)
                 .orElse(null);
@@ -82,10 +82,10 @@ public final class ResponseCache {
      * @return the first element for specified lock if and only if corresponding response
      * arrives; otherwise, returns null.
      */
-    public Response take(String key) {
+    public Response.ResponseProto take(String key) {
         return Optional.ofNullable(this.cachePool.get(key))
                 .map(queue -> {
-                    Response response = null;
+                    Response.ResponseProto response = null;
                     try {
                         response = queue.take();
                     } catch (InterruptedException e) {
@@ -103,7 +103,7 @@ public final class ResponseCache {
      *
      * @param response specified response to be stored.
      */
-    public void put(Response response) {
+    public void put(Response.ResponseProto response) {
         String key = response.getKey();
         this.cachePool.computeIfAbsent(key,
                 k -> new ArrayBlockingQueue<>(ClientProperties.getProperties().getQueueSize()));

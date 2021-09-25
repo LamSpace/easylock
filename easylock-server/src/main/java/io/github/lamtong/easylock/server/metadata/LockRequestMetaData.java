@@ -28,7 +28,7 @@ import io.netty.channel.ChannelHandlerContext;
  * {@link ChannelHandlerContext} is included to send back corresponding response to clients.
  *
  * @author Lam Tong
- * @version 1.3.0
+ * @version 1.3.1
  * @see Dispatcher
  * @since 1.3.0
  */
@@ -36,9 +36,9 @@ public final class LockRequestMetaData {
 
     private final ChannelHandlerContext ctx;
 
-    private final Request request;
+    private final Request.RequestProto request;
 
-    public LockRequestMetaData(ChannelHandlerContext ctx, Request request) {
+    public LockRequestMetaData(ChannelHandlerContext ctx, Request.RequestProto request) {
         this.ctx = ctx;
         this.request = request;
     }
@@ -47,7 +47,7 @@ public final class LockRequestMetaData {
         return ctx;
     }
 
-    public Request getRequest() {
+    public Request.RequestProto getRequest() {
         return request;
     }
 

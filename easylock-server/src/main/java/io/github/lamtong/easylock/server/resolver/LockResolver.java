@@ -31,7 +31,7 @@ import io.github.lamtong.easylock.common.core.Response;
  * more functionality than {@link Resolver}.
  *
  * @author Lam Tong
- * @version 1.3.0
+ * @version 1.3.1
  * @since 1.0.0
  */
 public interface LockResolver extends Resolver {
@@ -42,7 +42,7 @@ public interface LockResolver extends Resolver {
      * @param lockRequest requests with {@code try-lock()} operation.
      * @return response
      */
-    Response resolveTryLock(Request lockRequest);
+    Response.ResponseProto resolveTryLock(Request.RequestProto lockRequest);
 
     /**
      * Resolves requests with {@code lock()} operations.
@@ -50,7 +50,7 @@ public interface LockResolver extends Resolver {
      * @param lockRequest requests with {@code lock()} operations.
      * @return response
      */
-    Response resolveLock(Request lockRequest);
+    Response.ResponseProto resolveLock(Request.RequestProto lockRequest);
 
     /**
      * Resolves unlocking requests.
@@ -58,6 +58,6 @@ public interface LockResolver extends Resolver {
      * @param unlockRequest unlocking request.
      * @return response
      */
-    Response resolveUnlock(Request unlockRequest);
+    Response.ResponseProto resolveUnlock(Request.RequestProto unlockRequest);
 
 }
