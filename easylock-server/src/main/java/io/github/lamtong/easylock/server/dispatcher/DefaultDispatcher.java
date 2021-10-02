@@ -25,6 +25,8 @@ import io.netty.channel.ChannelHandlerContext;
 
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Default implementation of {@link Dispatcher} to dispatch requests. At previous released versions, namely
@@ -55,6 +57,8 @@ public final class DefaultDispatcher implements Dispatcher {
      * Singleton of {@link DefaultDispatcher}.
      */
     private static final DefaultDispatcher instance = new DefaultDispatcher();
+
+    private static final ExecutorService pool = Executors.newCachedThreadPool();
 
     private final SimpleLockResolver simpleLock = SimpleLockResolver.getResolver();
 
@@ -118,8 +122,10 @@ public final class DefaultDispatcher implements Dispatcher {
     private void dispatch(ChannelHandlerContext context, Request.RequestProto request,
                           AbstractLockResolver resolver, Pipeline pipeline) {
         if (this.requestResolveImmediately(request)) {
-            Response.ResponseProto response = resolver.resolve(request);
-            context.writeAndFlush(response);
+            pool.execute(()->{
+                Response.ResponseProto response = resolver.resolve(request);
+                context.writeAndFlush(response);
+            });
         } else {
             pipeline.put(new LockRequestMetaData(context, request));
         }

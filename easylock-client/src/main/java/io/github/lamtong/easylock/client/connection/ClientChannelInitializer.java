@@ -16,13 +16,13 @@
 
 package io.github.lamtong.easylock.client.connection;
 
+import io.github.lamtong.easylock.common.core.Response;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-import io.netty.handler.codec.LengthFieldPrepender;
-import io.netty.handler.codec.serialization.ClassResolvers;
-import io.netty.handler.codec.serialization.ObjectDecoder;
-import io.netty.handler.codec.serialization.ObjectEncoder;
+import io.netty.handler.codec.protobuf.ProtobufDecoder;
+import io.netty.handler.codec.protobuf.ProtobufEncoder;
+import io.netty.handler.codec.protobuf.ProtobufVarint32FrameDecoder;
+import io.netty.handler.codec.protobuf.ProtobufVarint32LengthFieldPrepender;
 
 /**
  * Initializer for each client's channel when channels are initialized to server. Each channel
@@ -34,7 +34,7 @@ import io.netty.handler.codec.serialization.ObjectEncoder;
  * handle responses from server.
  *
  * @author Lam Tong
- * @version 1.2.0
+ * @version 1.3.1
  * @see ClientChannelPoolHandler
  * @see ResponseReceiver
  * @since 1.0.0
@@ -55,14 +55,11 @@ public final class ClientChannelInitializer extends ChannelInitializer<SocketCha
     @Override
     protected void initChannel(SocketChannel socketChannel) {
         socketChannel.pipeline()
-                .addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE,
-                        0, 4,
-                        0, 4))
-                .addLast(new LengthFieldPrepender(4))
-                .addLast("encoder", new ObjectEncoder())
-                .addLast("decoder", new ObjectDecoder(Integer.MAX_VALUE,
-                        ClassResolvers.cacheDisabled(null)))
-                .addLast("handler", this.receiver);
+                .addLast(new ProtobufVarint32FrameDecoder())
+                .addLast(new ProtobufDecoder(Response.ResponseProto.getDefaultInstance()))
+                .addLast(new ProtobufVarint32LengthFieldPrepender())
+                .addLast(new ProtobufEncoder())
+                .addLast(this.receiver);
     }
 
 }

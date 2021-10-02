@@ -105,8 +105,7 @@ public final class ResponseCache {
      */
     public void put(Response.ResponseProto response) {
         String key = response.getKey();
-        this.cachePool.computeIfAbsent(key,
-                k -> new ArrayBlockingQueue<>(ClientProperties.getProperties().getQueueSize()));
+        this.cachePool.putIfAbsent(key, new ArrayBlockingQueue<>(ClientProperties.getProperties().getQueueSize()));
         try {
             this.cachePool.get(key).put(response);
         } catch (InterruptedException e) {
