@@ -33,10 +33,11 @@ import java.util.logging.Logger;
  * or unlock request to check that whether corresponding response arrives or not.
  * <p>
  * Since that a client may send plenty of lock or unlock requests, thus it is essential to distinguish
- * those requests. Hence, each response contains a field named {@link Response#key}, which is passed from
- * corresponding {@link Request}. {@link Request}-send thread will check the <code>key</code> first to check
- * if corresponding response of that type, namely the <code>key</code>. And if the response with that key
- * arrives, then {@link Response#identity} will be verified for each thread.
+ * those requests. Hence, each response contains a field named {@link Response.ResponseProto#key_},
+ * which is passed from corresponding {@link Request}. {@link Request}-send thread will check the
+ * <code>key</code> first to check if corresponding response of that type, namely the <code>key</code>.
+ * And if the response with that key arrives, then {@link Response.ResponseProto#identity_} will be
+ * verified for each thread.
  *
  * @author Lam Tong
  * @version 1.3.1

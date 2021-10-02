@@ -28,7 +28,7 @@ import io.github.lamtong.easylock.common.core.Response;
  * </ol>
  * Hence, implementations of {@link Resolver} should own these abilities to resolve requests.
  * One of these implementations is {@link AbstractLockResolver}, which dispatches requests according
- * to their {@link Request#type}. And another one is {@link AbstractLockResolver}, which implements
+ * to their {@link Request.RequestProto#type_}. And another one is {@link AbstractLockResolver}, which implements
  * {@link Resolver} as well and defines a template to resolve requests for a certain type of lock
  * in {@link AbstractLockResolver#resolve(Request.RequestProto)}.
  *

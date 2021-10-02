@@ -39,7 +39,7 @@ import java.util.concurrent.Executors;
  * <b>Implementation of Serialization</b>
  * <p>
  * When requests with {@code lock()} operations will be passed into an instance of type {@link Pipeline}
- * via request's {@link Request#type} by wrapping into an instance of type {@link LockRequestMetaData}.
+ * via request's {@link Request.RequestProto#type_} by wrapping into an instance of type {@link LockRequestMetaData}.
  *
  * @author Lam Tong
  * @version 1.3.1

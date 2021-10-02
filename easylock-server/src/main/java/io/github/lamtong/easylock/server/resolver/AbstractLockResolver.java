@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * {@link AbstractLockResolver} implements interface {@link LockResolver}, providing a template to
  * resolve lock or unlock requests. Any implementations of {@link AbstractLockResolver} should not
- * and also can not override {@link #resolve(Request)}.
+ * and also can not override {@link #resolve(Request.RequestProto)}.
  * <p>
  * As an abstract class, {@link AbstractLockResolver} contains some fields to support the process
  * of {@code LockRequest} and {@code UnlockRequest}, such as {@link #lockHolder}, {@link #permissions}
