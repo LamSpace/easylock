@@ -30,21 +30,21 @@ import io.netty.handler.codec.protobuf.ProtobufVarint32LengthFieldPrepender;
  * <p>
  * Be aware that {@link ClientChannelInitializer} initialize the channel from client to server,
  * which means that it not only sends requests to server, but also receives responses from server.
- * Hence {@link ClientChannelInitializer} requires an instance of {@link ResponseReceiver} to
+ * Hence {@link ClientChannelInitializer} requires an instance of {@link ClientHandler} to
  * handle responses from server.
  *
  * @author Lam Tong
- * @version 1.3.1
+ * @version 1.3.2
  * @see ClientChannelPoolHandler
- * @see ResponseReceiver
+ * @see ClientHandler
  * @since 1.0.0
  */
 public final class ClientChannelInitializer extends ChannelInitializer<SocketChannel> {
 
-    private final ResponseReceiver receiver;
+    private final ClientHandler handler;
 
-    public ClientChannelInitializer(ResponseReceiver receiver) {
-        this.receiver = receiver;
+    public ClientChannelInitializer(ClientHandler handler) {
+        this.handler = handler;
     }
 
     /**
@@ -59,7 +59,7 @@ public final class ClientChannelInitializer extends ChannelInitializer<SocketCha
                 .addLast(new ProtobufDecoder(Response.ResponseProto.getDefaultInstance()))
                 .addLast(new ProtobufVarint32LengthFieldPrepender())
                 .addLast(new ProtobufEncoder())
-                .addLast(this.receiver);
+                .addLast(this.handler);
     }
 
 }

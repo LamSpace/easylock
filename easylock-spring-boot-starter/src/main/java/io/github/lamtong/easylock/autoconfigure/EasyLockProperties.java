@@ -22,7 +22,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * Properties to configure <code>easylock</code>.
  *
  * @author Lam Tong
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.0.0
  */
 @ConfigurationProperties(prefix = EasyLockProperties.EASY_LOCK_SERVER_PREFIX)
@@ -36,7 +36,9 @@ public class EasyLockProperties {
 
     private int channelConnections = 2;
 
-    private int cacheQueueSize = 1;
+    private int executorCount = 0;
+
+    private int ioThreads = 0;
 
     public String getServerHost() {
         return this.serverHost;
@@ -62,12 +64,20 @@ public class EasyLockProperties {
         this.channelConnections = channelConnections;
     }
 
-    public int getCacheQueueSize() {
-        return this.cacheQueueSize;
+    public int getExecutorCount() {
+        return executorCount;
     }
 
-    public void setCacheQueueSize(int cacheQueueSize) {
-        this.cacheQueueSize = cacheQueueSize;
+    public void setExecutorCount(int executorCount) {
+        this.executorCount = executorCount;
+    }
+
+    public int getIoThreads() {
+        return ioThreads;
+    }
+
+    public void setIoThreads(int ioThreads) {
+        this.ioThreads = ioThreads;
     }
 
 }

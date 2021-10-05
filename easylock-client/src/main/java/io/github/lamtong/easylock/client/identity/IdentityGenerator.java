@@ -14,11 +14,23 @@
  *  limitations under the License.
  */
 
+package io.github.lamtong.easylock.client.identity;
+
 /**
- * Packages of classes to generate kinds of {@code Lock}s.
+ * {@link IdentityGenerator} provides an approach to generates identities for locking and
+ * unlocking requests.
  *
  * @author Lam Tong
  * @version 1.3.2
  * @since 1.3.2
  */
-package io.github.lamtong.easylock.client.lock;
+public interface IdentityGenerator {
+
+    /**
+     * Retrieves an identity of type {@code long}.
+     *
+     * @return an identity.
+     */
+    long generate();
+
+}

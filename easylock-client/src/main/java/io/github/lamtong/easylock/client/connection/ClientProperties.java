@@ -22,7 +22,7 @@ package io.github.lamtong.easylock.client.connection;
  * for {@link ClientProperties}.
  *
  * @author Lam Tong
- * @version 1.2.0
+ * @version 1.3.2
  * @since 1.0.0
  */
 public final class ClientProperties {
@@ -37,7 +37,9 @@ public final class ClientProperties {
 
     private int connections = 2;
 
-    private int queueSize = 1;
+    private int executorCount = 0;
+
+    private int IOThreads = 0;
 
     private ClientProperties() {
     }
@@ -78,12 +80,20 @@ public final class ClientProperties {
         this.connections = connections;
     }
 
-    public int getQueueSize() {
-        return queueSize;
+    public int getExecutorCount() {
+        return executorCount;
     }
 
-    public void setQueueSize(int queueSize) {
-        this.queueSize = queueSize;
+    public void setExecutorCount(int executorCount) {
+        this.executorCount = executorCount;
+    }
+
+    public int getIOThreads() {
+        return IOThreads;
+    }
+
+    public void setIOThreads(int IOThreads) {
+        this.IOThreads = IOThreads;
     }
 
     @Override

@@ -18,6 +18,8 @@ package io.github.lamtong.easylock.client.lock;
 
 import io.github.lamtong.easylock.client.connection.ClientProperties;
 import io.github.lamtong.easylock.client.connection.RequestSender;
+import io.github.lamtong.easylock.client.identity.DefaultIdentityGenerator;
+import io.github.lamtong.easylock.client.identity.IdentityGenerator;
 import io.github.lamtong.easylock.common.core.Request;
 import io.github.lamtong.easylock.common.core.Response;
 
@@ -72,7 +74,7 @@ import java.util.logging.Logger;
  * {@code lock()} or {@code tryLock()} fails immediately.
  *
  * @author Lam Tong
- * @version 1.3.1
+ * @version 1.3.2
  * @see Lock
  * @since 1.2.0
  */
@@ -83,6 +85,8 @@ public final class ReadWriteLock extends Lock {
     private static final RequestSender sender = RequestSender.getSender();
 
     private static final ClientProperties properties = ClientProperties.getProperties();
+
+    private static final IdentityGenerator generator = DefaultIdentityGenerator.getInstance();
 
     ReadWriteLock(String key) {
         super(key);
@@ -169,7 +173,7 @@ public final class ReadWriteLock extends Lock {
                     .setLockRequest(true)
                     .setTryLock(tryLock)
                     .setReadLock(true)
-                    .setIdentity((this.getKey() + Thread.currentThread().getName() + "ReadWriteLock" + "Lock").hashCode())
+                    .setIdentity(generator.generate())
                     .build();
             Response.ResponseProto response = sender.send(request);
             if (response.getSuccess()) {
@@ -205,7 +209,7 @@ public final class ReadWriteLock extends Lock {
                     .setLockRequest(false)
                     .setTryLock(false)
                     .setReadLock(true)
-                    .setIdentity((this.getKey() + Thread.currentThread().getName() + "ReadWriteLock" + "Unlock").hashCode())
+                    .setIdentity(generator.generate())
                     .build();
             Response.ResponseProto response = sender.send(request);
             if (response.getSuccess()) {
@@ -265,7 +269,7 @@ public final class ReadWriteLock extends Lock {
                     .setLockRequest(true)
                     .setTryLock(tryLock)
                     .setReadLock(false)
-                    .setIdentity((this.getKey() + Thread.currentThread().getName() + "ReadWriteLock" + "Lock").hashCode())
+                    .setIdentity(generator.generate())
                     .build();
             Response.ResponseProto response = sender.send(request);
             if (response.getSuccess()) {
@@ -301,7 +305,7 @@ public final class ReadWriteLock extends Lock {
                     .setLockRequest(false)
                     .setTryLock(false)
                     .setReadLock(false)
-                    .setIdentity((this.getKey() + Thread.currentThread().getName() + "ReadWriteLock" + "Unlock").hashCode())
+                    .setIdentity(generator.generate())
                     .build();
             Response.ResponseProto response = sender.send(request);
             if (response.getSuccess()) {

@@ -53,7 +53,7 @@ import java.util.logging.Logger;
  * will activate processes to methods, annotated by {@link BySimpleLock}.
  *
  * @author Lam Tong
- * @version 1.2.2
+ * @version 1.3.2
  * @since 1.0.0
  */
 @Configuration
@@ -85,9 +85,22 @@ public class EasyLockAutoConfiguration {
             clientProperties.setApplication(UUID.randomUUID().toString());
         }
         clientProperties.setHost(this.properties.getServerHost());
+        if (this.properties.getServerPort() <= 0) {
+            throw new IllegalArgumentException("Server port should be greater than 0.");
+        }
         clientProperties.setPort(this.properties.getServerPort());
+        if (this.properties.getChannelConnections() <= 0) {
+            throw new IllegalArgumentException("Channel connections should be greater than 0.");
+        }
         clientProperties.setConnections(this.properties.getChannelConnections());
-        clientProperties.setQueueSize(this.properties.getCacheQueueSize());
+        if (this.properties.getExecutorCount() < 0) {
+            throw new IllegalArgumentException("Executor count should be greater or equal to 0.");
+        }
+        clientProperties.setExecutorCount(this.properties.getExecutorCount());
+        if (this.properties.getIoThreads() < 0) {
+            throw new IllegalArgumentException("IO Threads should be greater or equal to 0.");
+        }
+        clientProperties.setIOThreads(this.properties.getIoThreads());
         if (logger.isLoggable(Level.INFO)) {
             logger.log(Level.INFO, "Properties for client and server has been updated.");
         }

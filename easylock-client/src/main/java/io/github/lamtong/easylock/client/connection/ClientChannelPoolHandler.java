@@ -31,7 +31,7 @@ import java.util.logging.Logger;
  * is required to initialize the channel.
  *
  * @author Lam Tong
- * @version 1.2.0
+ * @version 1.3.2
  * @see ChannelPoolProvider
  * @see ClientChannelInitializer
  * @since 1.0.0
@@ -57,7 +57,7 @@ public final class ClientChannelPoolHandler implements ChannelPoolHandler {
         }
         SocketChannel socketChannel = (SocketChannel) channel;
         socketChannel.pipeline()
-                .addLast(new ClientChannelInitializer(new ResponseReceiver()));
+                .addLast(new ClientChannelInitializer(new ClientHandler()));
     }
 
 }

@@ -15,10 +15,10 @@
  */
 
 /**
- * Packages of classes to generate kinds of {@code Lock}s.
+ * Package of classes to generate identities for requests.
  *
  * @author Lam Tong
  * @version 1.3.2
  * @since 1.3.2
  */
-package io.github.lamtong.easylock.client.lock;
+package io.github.lamtong.easylock.client.identity;

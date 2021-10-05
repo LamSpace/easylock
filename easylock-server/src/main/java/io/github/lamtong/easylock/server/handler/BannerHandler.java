@@ -63,7 +63,7 @@ public final class BannerHandler {
                         "                             /'                                                \n" +
                         "                     /     /'                                                  \n" +
                         "                    (___,/'                                                   \n" +
-                        "\n          Copyright 2021 the original author, Lam Tong, Version 1.3.1.\n");
+                        "\n          Copyright 2021 the original author, Lam Tong, Version 1.3.2.\n");
     }
 
     /**

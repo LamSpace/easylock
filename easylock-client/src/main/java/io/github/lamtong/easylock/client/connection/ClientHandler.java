@@ -24,18 +24,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * {@link ResponseReceiver} is a handler for in-bound channel, which is often used to
+ * {@link ClientHandler} is a handler for in-bound channel, which is often used to
  * receive and handle responses from server for each channel.
  *
  * @author Lam Tong
- * @version 1.3.1
+ * @version 1.3.2
  * @since 1.0.0
  */
-public final class ResponseReceiver extends ChannelInboundHandlerAdapter {
+public final class ClientHandler extends ChannelInboundHandlerAdapter {
 
-    private static final Logger logger = Logger.getLogger(ResponseReceiver.class.getName());
+    private static final Logger logger = Logger.getLogger(ClientHandler.class.getName());
 
-    private static final ResponseCache cache = ResponseCache.getCache();
+    private static final ResponsePool cache = ResponsePool.getInstance();
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {

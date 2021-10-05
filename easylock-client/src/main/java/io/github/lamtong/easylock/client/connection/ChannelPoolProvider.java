@@ -50,7 +50,7 @@ import java.net.InetSocketAddress;
  *                 .                        .
  *                 .                        . ( initialize channel )
  *                 .                        .
- *       ResponseReceiver             ResponseReceiver
+ *           ClientHandler             ClientHandler
  *                  .                      .
  *                   .                    .
  *                    .                  . ( handle response from server )
@@ -61,7 +61,7 @@ import java.net.InetSocketAddress;
  * </pre>
  *
  * @author Lam Tong
- * @version 1.2.0
+ * @version 1.3.2
  * @see ClientChannelPoolHandler
  * @see FixedChannelPool
  * @since 1.0.0
@@ -70,13 +70,27 @@ public final class ChannelPoolProvider {
 
     private static final ClientProperties properties = ClientProperties.getProperties();
 
-    private static final EventLoopGroup worker = new NioEventLoopGroup();
+    private static final EventLoopGroup worker;
 
-    private static final Bootstrap bootstrap = new Bootstrap();
+    private static final int IOThreads;
+
+    private static final Bootstrap bootstrap;
 
     private static final FixedChannelPool pool;
 
     static {
+        // static scope for initialization
+        if (properties.getExecutorCount() == 0) {
+            worker = new NioEventLoopGroup();
+        } else {
+            worker = new NioEventLoopGroup(properties.getExecutorCount());
+        }
+        if (properties.getIOThreads() == 0) {
+            IOThreads = ((NioEventLoopGroup) worker).executorCount();
+        } else {
+            IOThreads = properties.getIOThreads();
+        }
+        bootstrap = new Bootstrap();
         bootstrap.group(worker)
                 .remoteAddress(new InetSocketAddress(properties.getHost(), properties.getPort()))
                 .channel(NioSocketChannel.class)
@@ -89,8 +103,17 @@ public final class ChannelPoolProvider {
     private ChannelPoolProvider() {
     }
 
+    /**
+     * Retrieves a pool with fixed channel connections.
+     *
+     * @return a channel pool.
+     */
     public static FixedChannelPool getPool() {
         return pool;
+    }
+
+    public static int getIOThreads() {
+        return IOThreads;
     }
 
 }
